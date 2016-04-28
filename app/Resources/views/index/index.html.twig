@@ -1,0 +1,71 @@
+{% extends 'layout.html.twig' %}
+
+{% block content -%}
+{#<div class="jumbotron">#}
+    {#<h1>Jumbotron heading</h1>#}
+    {#<p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>#}
+    {#<p><a class="btn btn-lg btn-success" href="#" role="button">Sign up today</a></p>#}
+{#</div>#}
+
+<div class="row marketing">
+    <h1>{{ 'homepage.title'|trans }}</h1>
+    {% if tests %}
+    <table class="table table-bordered table-hover table-striped test-list">
+        <tr>
+            <th>{{ 'title.id'|trans }}</th>
+            <th>{{ 'title.name'|trans }}</th>
+            <th>{{ 'title.description'|trans }}</th>
+            <th>{{ 'title.passed_count'|trans }}</th>
+            {% if is_logged_user() %}<th>{{ 'title.passed_status'|trans }}</th>{% endif %}
+            <th></th>
+        </tr>
+        {% for test in tests %}
+            {% set isTestPassed = is_test_passed(test.id) %}
+            {% set isTestFree = test.isFree() %}
+            {% set isTestPurchased = is_test_purchased(test.id) %}
+            <tr style="vertical-align: middle">
+                <td>{{ test.id }}</td>
+                <td>{{ test.name }}</td>
+                <td>{{ test.description }}</td>
+                <td style="text-align: center">{{ test.passed }}</td>
+                {% if is_logged_user() %}
+                <td style="text-align: center">
+                    {% if not isTestFree and isTestPurchased %}<span style="color:red">{{ 'test.is_purсhased'|trans }}</span><br /><br />{% endif %}
+                    <span style="color:green">{% if isTestPassed %}{{ 'test.passed.yes'|trans }}{% else %}{{ 'test.passed.no'|trans }}{% endif %}</span>
+                </td>
+                {% endif %}
+                <td style="text-align: center">
+                    {% if not test_is_active(test.id) %}
+
+                        {% if isTestFree or isTestPurchased %}
+                            {% if is_test_passed(test.id) %}
+                            <a class="btn btn-warning" href="{{ path('test_page', {'id': test.id}) }}">{{ 'test.do_test_again'|trans }}</a>
+                            {% else %}
+                            <a class="btn btn-success" href="{{ path('test_page', {'id': test.id}) }}">{{ 'test.do_test'|trans }}</a>
+                            {% endif %}
+                        {% else %}
+                            <a class="btn btn-success" href="{{ path('user_purchase', {'test_id': test.id}) }}">{{ 'label.buy'|trans({'%price%': test.price}) }}</a>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="m10"><span class="green-text">{{ display_test_in_progress(test.id) }}</span></div>
+                        <div class="m10">
+                            <a class="btn btn-warning" href="{{ path('test_page', {'id': test.id}) }}">{{ 'continue_test'|trans }}</a>
+                        </div>
+                        <div class="m10">
+                            <a class="btn btn-danger" href="{{ path('test_cancel', {'id': test.id}) }}"
+                               title="{{ 'cancel_test'|trans }}"
+                               onclick="if (!confirm('{{ 'test.confirm_cancel'|trans }}')) return false;">
+                                <i class="glyphicon glyphicon-remove"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>{{ 'homepage.no_tests'|trans }}</p>
+    {% endif %}
+</div>
+{% endblock %}

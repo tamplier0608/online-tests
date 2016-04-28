@@ -1,0 +1,8 @@
+<phpunit bootstrap="../tests/unit/_bootstrap.php">
+    <testsuites>
+        <testsuite name="core">
+            <directory>../tests/unit/CoreBundle</directory>
+        </testsuite>
+        <testsuite>../tests/unit/AppBundle</testsuite>
+    </testsuites>
+</phpunit>

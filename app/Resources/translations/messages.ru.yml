@@ -1,0 +1,105 @@
+homepage:
+    title: Все тесты
+    no_tests: Приносим свои извинения, но тесты ещё не добавлены
+
+title:
+    id: №
+    name: Название
+    description: Описание
+    passed_count: Пройдено
+    passed_status: Статус
+
+continue_test: Продолжить
+cancel_test: Сбросить результат
+passed: Пройден %count% раз
+next: Дальше
+back: На главную
+
+result:
+    description: Описание результата
+    points: "Результат, баллов: %points%"
+
+error:
+    404: Запрошенной страницы не существует
+    other: На сервере произошла ошибка, приносим свои извинения
+    repeat_answer: "Отвечайте честно: на все вопросы по порядку и один раз!"
+    empty_answer: Выберите вариант ответа!
+
+test:
+    result_success: Тест успешно пройден!
+    not_found: Запрошенный тест не найден!
+    canceled: Прогресс по тесту "%title%" успешно аннулирован.
+    start_again: Вы можете пройти его еще раз, перейдя по <a href="%link%">ссылке</a>
+    confirm_cancel: Прогресс по тесту будет утерян. Продолжить?
+    is_paid: Для прохождения теста, его необходимо купить.
+    is_already_passed: Вы уже проходили этот тест. Результат будет обновлен.
+
+    do_test: Пройти
+    do_test_again: Пройти снова
+    passed:
+        yes: пройден
+        no: не пройден
+    is_purсhased: куплен
+
+link:
+    homepage: Главная
+    aboutpage: О проекте
+    contactpage: Контакты
+    login: Войти
+    signin: Регистрация
+    user:
+        cabinet: Личный кабинет
+        logout: Выход
+        add_credit: Пополнить баланс
+
+label:
+    username: Логин
+    password: Пароль
+    repeat_password: Повторите пароль
+    repeat_password: Повторите пароль
+    email: E-mail
+    submit: Отправить
+    buy: Купить $%price%
+    sum: Сумма
+
+flashes:
+    is_logged_user: Вы уже залогинены и не можете зарегистрироваться
+    is_not_logged: Чтобы выйти из системы, сначала нужно залогиниться
+    registration_success: Поздравляем, теперь вы можете проходить тестирование и сохранять результаты в своем личном кабинете. <br /> На почтовый ящик, указанный при регистрации, отправлено письмо с кодом активации учетной записи.
+
+user:
+    activation_success: Ваш профиль был успешно активирован.
+    activation_error: Ошибка активации. Неверный код активации.
+    is_active: Пользователь уже активирован.
+    wallet: Баланс
+    need_login_or_signin: Для продолжения вам нужно войти в личный кабинет или зарегистрироваться.
+    credit_changed: Баланс изменен.
+    add_credit_notice: <strong>Внимание!</strong> Данная страница на данный момент может использоваться только в тестовых целях для изменения баланса пользователя.
+    purchase:
+        cannot_purchase_free_content: Вы не можете купить бесплатный контент.
+        cannot_purchase_purchased_content: Вы уже покупали этот тест.
+        error: <strong>Ошибка!</strong> Пожалуйста, попробуйте позже.
+        not_enough_money: <strong>Ошибка!</strong> Недостаточно денег на счету для совершения данной покупки.
+        success: Тест куплен.
+
+
+email:
+    activation:
+        subject: Активация учетной записи Psycho Tests
+        body: "Благодарим за регистрацию! В подарок вам начислено $10 на кошелек.\n\nДля активации учетной записи перейдите по ссылке: {{ link }}"
+        from: psycho.tests@vseoweb.in.ua
+
+cabinet:
+    no_records: Нет записей
+    tab:
+        test_results: Результаты тестов
+        purchased_tests: Купленные тесты
+        comments: Комментарии
+    label:
+        test: Тест
+        points: Баллы
+        passed_at: Дата прохождения
+        result: Результат
+        order_id: ID покупки
+        content: Контент
+        purchased_at: Дата покупки

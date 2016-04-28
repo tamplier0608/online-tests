@@ -1,0 +1,44 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+    {% if is_test_passed(test.id) %}
+    <div class="alert alert-info alert-dismissible fade in" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        {{ 'test.is_already_passed'|trans }}
+    </div>
+    {% endif %}
+<h2>{{ test.name }}</h2>
+<div>{{ test.description }}</div>
+<br />
+
+    {% if test.isFree() or is_test_purchased(test.id) %}
+    <div class="panel panel-default">
+        <div class="panel-heading">{{ question.number }}. {{ question.value }}</div>
+        <div class="panel-body">
+            <form action="" method="post">
+                <input type="hidden" name="question_number" value="{{ question.number }}">
+
+                <ul class="test_options">
+                    {% for index, option in question.options %}
+                        <li>
+                            <input type="radio" id="option-{{ index }}" name="option" value="{{ option.points }}"/>
+                            <label for="option-{{ index }}">{{ option.value }}</label>
+                        </li>
+                    {% endfor%}
+                </ul>
+                <button class="btn btn-success submit-btn" type="submit" id="submit" name="submit">
+                    {{ 'next'|trans }} <i class="glyphicon glyphicon-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p>
+        {{ 'test.is_paid'|trans }} <br /><br />
+        <a class="btn btn-success" href="{{ path('user_purchase', {'test_id': test.id}) }}">{{ 'label.buy'|trans({'%price%': test.price}) }}</a>
+    </p>
+    {% endif %}
+    <br />
+    <p><a href="{{ path('homepage') }}"><i class="glyphicon glyphicon-arrow-left"></i> {{ 'back'|trans }}</a></p>
+{% endblock %}
+

@@ -1,0 +1,22 @@
+username:
+    not_blank: Введите логин
+    min_length: Логин не должен быть короче {{ limit }} символов
+    max_length: Логин не должен быть длиннее {{ limit }} символов
+    not_unique: Указанный логин уже зарегистрирован
+
+password:
+    not_blank: Введите пароль
+    not_equal: Пароли не совпадают
+    min_length: Пароль не должен быть короче {{ limit }} символов
+    max_length: Пароль не должен быть длиннее {{ limit }} символов
+
+email:
+    not_blank: Введите E-mail
+    not_valid_email: Неверный формат E-mail
+    not_unique: Указанный E-mail адрес уже зарегистрирован
+
+auth.credentials_not_match: Ошибка авторизации
+
+sum:
+    not_blank: Введите сумму пополнения
+    not_numeric: Сумма должна быть числом

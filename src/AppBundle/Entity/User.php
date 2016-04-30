@@ -2,23 +2,21 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Entity\Repository\User\PassedTests;
-use AppBundle\Entity\Repository\Comments;
 use AppBundle\Entity\Repository\Orders;
+use AppBundle\Entity\Repository\User\PassedTests;
 use CoreBundle\Db\Entity;
 
 class User extends Entity
 {
     protected static $table = 'users';
-    protected static $avoidSaving = array('testResults', 'comments', 'orders');
+    protected static $avoidSaving = array('testResults', 'orders');
 
     protected $testResults = array();
-    protected $comments = array();
     protected $orders = array();
 
     public function getPassedTests($force = false)
     {
-        if (empty($this->testResults) || $force) {
+        if (0 === count($this->testResults) || $force) {
             $testResultsRepository = new PassedTests();
             $this->testResults = $testResultsRepository->findBy(array('user_id=?'), array($this->id));
         }
@@ -26,19 +24,9 @@ class User extends Entity
         return $this->testResults;
     }
 
-    public function getComments($force = false)
-    {
-        if (empty($this->comments) || $force) {
-            $commentsRepository = new Comments();
-            $this->comments = $commentsRepository->findBy(array('user_id=?'), array($this->id));
-        }
-
-        return $this->comments;
-    }
-
     public function getOrders($force = false)
     {
-        if (empty($this->orders) || $force) {
+        if (0 === count($this->orders) || $force) {
             $ordersRepository = new Orders();
             $this->comments = $ordersRepository->findBy(array('customer_id=?'), array($this->id));
         }

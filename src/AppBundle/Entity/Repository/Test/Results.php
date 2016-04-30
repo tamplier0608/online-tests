@@ -11,9 +11,11 @@ class Results extends Repository
 
     public function getDescriptionByPoints($testId, $points)
     {
-        return $this->findBy(
+        $result = $this->findBy(
             array('test_id = ?', 'min_points <= ?', 'max_points >= ?'),
             array($testId, $points, $points)
-        )[0];
+        );
+
+        return $result ? $result[0] : false;
     }
 }

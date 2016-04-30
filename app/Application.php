@@ -1,6 +1,7 @@
 <?php
 
 use CoreBundle\Db\Adapter\DoctrineDbal;
+use CoreBundle\Test\Flow as TestFlow;
 use Igorw\Silex\ConfigServiceProvider;
 use MJanssen\Provider\RoutingServiceProvider;
 use Silex\Application as SilexCoreApplication;
@@ -12,7 +13,6 @@ use Silex\Provider\UrlGeneratorServiceProvider;
 use Symfony\Component\Translation\Loader\YamlFileLoader;
 use Silex\Provider\FormServiceProvider;
 use Silex\Provider\ValidatorServiceProvider;
-use Silex\Provider\SwiftmailerServiceProvider;
 
 class Application extends SilexCoreApplication
 {
@@ -109,18 +109,26 @@ class Application extends SilexCoreApplication
                 echo '</pre>';
             }));
 
-            $twig->addFunction(new Twig_SimpleFunction('test_is_active', function($testId) use($app) {
-                $testInfo = $app['session']->get('test-' . $testId);
-                if ($testInfo && false == $testInfo['completed']) {
+            $twig->addFunction(new Twig_SimpleFunction('is_test_in_progress', function($testId) use($app) {
+                $testFlow = new TestFlow(new \CoreBundle\Test\Storage\Session($app['session']));
+
+                if (
+                    false === $testFlow->getTestProgress()->isEmpty()
+                    && $testId == $testFlow->getTestProgress()->getTestId()
+                    && false === $testFlow->getTestProgress()->isCompleted()
+                ) {
                     return true;
                 }
+                return false;
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('display_test_in_progress', function($testId) use($app) {
-                $testInfo = $app['session']->get('test-' . $testId);
-                $testQuestionRepository = new \AppBundle\Entity\Repository\Test\Questions();
-                $all = $testQuestionRepository->countAll(array('test_id=?'), array($testId));
-                $complete = count($testInfo['answers']);
+                $testFlow = new TestFlow(new \CoreBundle\Test\Storage\Session($app['session']));
+
+                $testRepository = new \AppBundle\Entity\Repository\Tests();
+                $test = $testRepository->find($testId);
+                $all = count($test->getQuestions());
+                $complete = count($testFlow->getTestProgress()->getAnswers());
                 $percent = $complete * 100 / $all;
 
                 return sprintf('%d / %d (%d%%)', $complete, $all, $percent);
@@ -135,7 +143,7 @@ class Application extends SilexCoreApplication
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('is_test_passed', function($testId) use($app) {
-                $user = $app['session']->has('user') ? $this['session']->get('user')[0] : false;
+                $user = $this['session']->get('user')[0];
 
                 if (!$user) {
                     return false;
@@ -167,7 +175,9 @@ class Application extends SilexCoreApplication
             'locale_fallbacks' => array('ru'),
         ));
 
-        $this['translator'] = $this->share($this->extend('translator', function ($translator, $this) {
+        $app = $this;
+
+        $this['translator'] = $this->share($this->extend('translator', function ($translator, $app) {
             $translator->addLoader('yaml', new YamlFileLoader());
             $translator->addResource('yaml', __DIR__ . '/Resources/translations/messages.ru.yml', 'ru');
             $translator->addResource('yaml', __DIR__ . '/Resources/translations/validation.ru.yml', 'ru', 'validation');

@@ -15,13 +15,18 @@
     <div class="panel panel-default">
         <div class="panel-heading">{{ question.number }}. {{ question.value }}</div>
         <div class="panel-body">
-            <form action="" method="post">
+            <form method="post">
                 <input type="hidden" name="question_number" value="{{ question.number }}">
 
                 <ul class="test_options">
                     {% for index, option in question.options %}
                         <li>
-                            <input type="radio" id="option-{{ index }}" name="option" value="{{ option.points }}"/>
+                            {% if question.multioption %}
+                                <input type="checkbox" id="option-{{ index }}" name="option[]" value="{{ option.points }}"/>
+                            {% else %}
+                                <input type="radio" id="option-{{ index }}" name="option" value="{{ option.points }}"/>
+                            {% endif %}
+
                             <label for="option-{{ index }}">{{ option.value }}</label>
                         </li>
                     {% endfor%}

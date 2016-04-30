@@ -35,7 +35,7 @@
                 </td>
                 {% endif %}
                 <td style="text-align: center">
-                    {% if not test_is_active(test.id) %}
+                    {% if not is_test_in_progress(test.id) %}
 
                         {% if isTestFree or isTestPurchased %}
                             {% if is_test_passed(test.id) %}

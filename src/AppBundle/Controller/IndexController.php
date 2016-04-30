@@ -2,9 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Repository\User\PassedTests;
-use AppBundle\Entity\Repository\Test\Options as TestOptions;
-use AppBundle\Entity\Repository\Test\Questions as TestQuestions;
 use AppBundle\Entity\Repository\Test\Results as TestResults;
 use AppBundle\Entity\Repository\Tests;
 use AppBundle\Entity\Test;
@@ -13,19 +10,12 @@ use CoreBundle\Test\Storage\Session;
 use CoreBundle\Test\Flow as TestFlow;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use CoreBundle\Test\Flow\Calculate\Strategy\TotalWeight;
 
 class IndexController
 {
     protected $testFlow;
 
-    public function getTestFlow($testId, $app)
-    {
-        if (null === $this->testFlow) {
-            $this->testFlow = new TestFlow($testId, new Session($app['session']));
-        }
-        return $this->testFlow;
-    }
-    
     public function indexAction(Request $request, \Application $app)
     {
         $testsRepository = new Tests();
@@ -41,20 +31,31 @@ class IndexController
     public function doTestAction(Request $request, \Application $app)
     {
         $testId = $request->get('id');
-        $testFlow = $this->getTestFlow($testId, $app);
+        $testFlow = $this->getTestFlow($app);
         
-        $testData = $testFlow->getTestData();
+        $testData = $testFlow->getTestProgress();
+        $user = $this->isLoggedUser($app);
 
         if ($testData->isEmpty() or $testData->isCompleted()) {
-            $testFlow->initTestData();
+            $userId = $user ? $user->id : false;
+            $testFlow->initTestData($testId, $userId);
+        }
+        # if there is test in progress redirect user to homepage with notice
+        else if (false === $testData->isEmpty() && $testData->getTestId() !== $testId) {
+            $app['session']->getFlashBag()->set('warning', $app['translator']->trans('test.test_in_progress_found'));
+            return $app->redirect($app['url_generator']->generate('homepage'));
         }
 
-        $testData = $testFlow->getTestData($force = true);
+        if ($user && !$testData->getUserId()) {
+            $testData->setUserId($user->id);
+        }
+
+        $testData = $testFlow->getTestProgress($force = true);
         $answers = $testData->getAnswers();
         $nextQuestion = 1;
 
         if (!is_null($answers)) {
-            $nextQuestion = $testFlow->getNextQuestionNumber();
+            $nextQuestion = $testFlow->getTestProgress()->getCurrentQuestion();
         }
 
         list($test, $question) = $this->getQuestionData($testId, $nextQuestion);
@@ -76,62 +77,54 @@ class IndexController
     public function processTestAction(Request $request, \Application $app)
     {
         $testId = $request->get('id');
-        $testFlow = $this->getTestFlow($testId, $app);
+        $testFlow = $this->getTestFlow($app);
+        $user = $this->isLoggedUser($app);
 
-        $prevQuestion = (int) $app['request']->get('question_number', 1);
+        if ($user && !$testFlow->getTestProgress()->getUserId()) {
+            $testFlow->getTestProgress()->setUserId($user->id);
+        }
+
+        $prevQuestion = (int) $request->get('question_number', 1);
         $nextQuestion = (int) $testFlow->getNextQuestionNumber();
-        $answer = $app['request']->get('option');
+        $answer = $request->get('option');
 
-        # set result according to POST data
-        if (
-            # check if it is first attempt to answer this question
-            false === $testFlow->getTestData()->hasAnswer($nextQuestion) &&
-
-            # check if it's right number of question. We have not saved new answer yet so
-            # number of the next question should be equal to number of previous question
-            $nextQuestion === $prevQuestion
-        ) {
-            $currentResult = $testFlow->getTestData()->getResult(); # get current result from PHP session
-
+        # save answer of previous question according to POST data
+        if (false === $testFlow->getTestProgress()->hasAnswer($prevQuestion)) {
             if (null !== $answer) {
-                $result = $currentResult + $answer;
-
-                $testFlow->getTestData()->setResult($result);
-                $testFlow->getTestData()->setAnswer($nextQuestion, $answer);
-
-                $question['number'] = ++$nextQuestion;
+                $testFlow->getTestProgress()->saveAnswer($prevQuestion, $answer);
+                $testFlow->getTestProgress()->setCurrentQuestion($nextQuestion);
             } else {
                 $app['session']->getFlashBag()->set('danger', $app['translator']->trans('error.empty_answer'));
             }
         } else {
             $app['session']->getFlashBag()->set('warning', $app['translator']->trans('error.repeat_answer'));
-            $question['number'] = $nextQuestion;
         }
 
         if ($app['debug']) {
-            $answers = $testFlow->getTestData()->getAnswers();
+            $answers = $testFlow->getTestProgress()->getAnswers();
             echo '<pre>';
             echo 'Answer: ' . var_export(!is_null($answer), true) . '<br />';
             echo 'Count answers: ' . var_export(count($answers), true) . '<br />';
-            echo 'Next question: ' . var_export($nextQuestion, true) . '<br />';
+            echo 'Prev question in request: ' . var_export($prevQuestion, true) . '<br />';
+            echo 'Current question in SESSION: ' . var_export($testFlow->getTestProgress()->getCurrentQuestion(), true) . '<br />';
             echo 'Last answered question: ' . var_export(count($answers), true) . '<br />';
             echo '</pre>';
         }
 
-        $data = $this->getQuestionData($testId, $nextQuestion);
+        $data = $this->getQuestionData($testId, $testFlow->getTestProgress()->getCurrentQuestion());
 
-        if (false == $data) {
+        # test is over
+        if (false === $data) {
             $app['session']->getFlashBag()->set('success', $app['translator']->trans('test.result_success'));
 
-            if (false === $testFlow->getTestData()->isCompleted()) {
+            if (false === $testFlow->getTestProgress()->isCompleted()) {
                 $test = new Test($testId);
-                $test->passed = $test->passed + 1;
-                $test->save();
+                $testResult = $testFlow->calculateResult($test->getCalcStrategy());
+                $testFlow->getTestProgress()->setResult($testResult);
+                $testFlow->getTestProgress()->setCompleted(true);
 
-                $this->savePassedTestRecord($app, $testFlow, $testId);
-                
-                $testFlow->getTestData()->setCompleted(true);
-                $testFlow->saveTestData(); # save test data in session
+                $this->updatePassedOfTest($testId);
+                $this->savePassedTestRecord($testFlow, $testId);
             }
 
             return $app->redirect($app['url_generator']->generate('result_page', array('id' => $testId)));
@@ -143,30 +136,34 @@ class IndexController
             throw new NotFoundHttpException($app['translator']->trans('test.not_found'));
         }
 
-        $testFlow->getTestData()->setNextQuestion($nextQuestion);
-        $testFlow->saveTestData(); # save data in session
-
         return $app['twig']->render('index/test.html.twig', array(
             'test' => $test,
             'question' => $question,
         ));
     }
 
-    protected function savePassedTestRecord(\Application $app, $testFlow, $testId)
+    protected function updatePassedOfTest($testId)
     {
-        $points = $testFlow->getTestData()->getResult();
+        $test = new Test($testId);
+        $test->passed = $test->passed + 1;
+        $test->save();
+    }
+
+    protected function savePassedTestRecord(TestFlow $testFlow, $testId)
+    {
+        $points = $testFlow->getTestProgress()->getResult();
         $testResultsRepository = new TestResults();
         $testResult = $testResultsRepository->getDescriptionByPoints($testId, $points);
 
-        $testResult['points'] = $points;
+        $userId = $testFlow->getTestProgress()->getUserId();
 
-        if ($user = $this->isLoggedUser($app)) {
+        if ($userId) {
             $passedTest = new PassedTest();
-            $passedTest->user_id = $user->id;
+            $passedTest->user_id = $userId;
             $passedTest->result_id = $testResult->id;
             $passedTest->points = $points;
             $passedTest->test_id = $testId;
-            $passedTest->test_data = serialize($testFlow->getTestData());
+            $passedTest->test_data = serialize($testFlow->getTestProgress());
 
             $now = new \DateTime();
             $passedTest->passed_at = $now->format('Y-m-d H:i:s');
@@ -178,9 +175,9 @@ class IndexController
     public function finishTestAction(Request $request, \Application $app)
     {
         $testId = $request->get('id');
-        $testFlow = $this->getTestFlow($testId, $app);
+        $testFlow = $this->getTestFlow($app);
 
-        $points = $testFlow->getTestData()->getResult();
+        $points = $testFlow->getTestProgress()->getResult();
         $testResultsRepository = new TestResults();
         $testResult = $testResultsRepository->getDescriptionByPoints($testId, $points);
 
@@ -206,22 +203,16 @@ class IndexController
         $testRepository = new Tests();
         $test = $testRepository->find($id);
 
-        $questionRepository = new TestQuestions();
-        $questionCount = $questionRepository->countAll(array('test_id = ?'), array($test['id']));
+        $questions = $test->getQuestions();
+        $questionCount = count($questions);
 
         if ($questionNumber > $questionCount) {
             return false; # it means test is over
         }
 
-        $question = $questionRepository->findBy(
-            array('test_id = ?'),
-            array($test['id']),
-            ($questionNumber - 1) . ', 1' #
-        )[0];
-
+        $question = $questions[$questionNumber - 1];
         $question['number'] = $questionNumber;
-        $optionsRepository = new TestOptions();
-        $question['options'] = $optionsRepository->findBy(array('question_id = ?'), array($question['id']));
+        $question['options'] = $question->getOptions();
 
         return array($test, $question);
     }
@@ -229,7 +220,7 @@ class IndexController
     public function cancelTestAction(Request $request, \Application $app)
     {
         $testId = $request->get('id');
-        $testFlow = $this->getTestFlow($testId, $app);
+        $testFlow = $this->getTestFlow($app);
 
         $test = new Test($testId);
         $testFlow->removeTestData(); # remove test data from session
@@ -246,7 +237,15 @@ class IndexController
         return $app->redirect($app['url_generator']->generate('homepage'));
     }
 
+    public function getTestFlow(\Application $app)
+    {
+        if (null === $this->testFlow) {
+            $this->testFlow = new TestFlow(new Session($app['session']));
+        }
+        return $this->testFlow;
+    }
+
     private function isLoggedUser($app) {
-        return $app['session']->has('user') ? $app['session']->get('user')[0] : false;
+        return $app['session']->get('user')[0];
     }
 }

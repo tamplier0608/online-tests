@@ -1,15 +1,22 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: serhii
- * Date: 5/1/16
- * Time: 12:22 AM
- */
 
 namespace CoreBundle\Test\Flow\Calculate\Strategy;
 
-
-class TotalWeight
+class TotalWeight implements StrategyInterface
 {
+    public function processData(array $data = array())
+    {
+        $totalWeight = 0;
 
+        foreach ($data as $index => $value) {
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    $totalWeight += $v;
+                }
+            } else {
+                $totalWeight += $value;
+            }
+        }
+        return $totalWeight;
+    }
 }

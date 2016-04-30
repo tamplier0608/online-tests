@@ -40,8 +40,7 @@
                                     <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                    <li><a>{{ 'user.wallet'|trans }}: <i class="glyphicon glyphicon-usd"></i>{{ get_user().wallet }}</a></li>
-                                    <li><a href="{{ path('user_addcredit') }}">{{ 'link.user.add_credit'|trans }}</a></li>
+                                    <li><a href="{{ path('user_addcredit') }}">{{ 'user.wallet'|trans }}: <i class="glyphicon glyphicon-usd"></i>{{ get_user().wallet }}</a></li>
                                     <li><a href="{{ path('user_cabinet') }}">{{ 'link.user.cabinet'|trans }}</a></li>
                                     <li role="separator" class="divider"></li>
                                     <li><a href="{{ path('user_logout') }}">{{ 'link.user.logout'|trans }}</a></li>

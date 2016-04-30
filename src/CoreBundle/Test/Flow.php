@@ -2,6 +2,7 @@
 
 namespace CoreBundle\Test;
 
+use CoreBundle\Test\Flow\Calculate\Strategy\StrategyInterface;
 use CoreBundle\Test\Storage\StorageInterface;
 use CoreBundle\Test\Data as TestData;
 
@@ -13,62 +14,41 @@ use CoreBundle\Test\Data as TestData;
 class Flow
 {
     protected $storage;
-    protected $defaultSessionData = array(
-        'result' => 0,
-        'next_question' => 1,
-        'answers' => array(),
-        'completed' => false
-    );
-    protected $storageKey = 'test-%s';
-    protected $testId;
     protected $testData;
 
-    public function __construct($testId, StorageInterface $storage)
+    public function __construct(StorageInterface $storage)
     {
         $this->storage = $storage;
-        $this->testId = $testId;
     }
 
-    public function initTestData()
+    public function initTestData($testId, $userId = false)
     {
         $key = $this->getSessionKey();
-        $this->storage->save($key, $this->defaultSessionData);
+        $this->storage->save($key, new TestData(array('test_id' => $testId, 'user_id' => $userId)));
     }
 
-    /**
-     * @return mixed
-     */
-    public function getTestId()
+    public function isTestDataInitialized()
     {
-        return $this->testId;
+        return null !== $this->storage->restore($this->getSessionKey());
     }
-
-    /**
-     * @param mixed $testId
-     */
-    public function setTestId($testId)
-    {
-        $this->testId = $testId;
-    }
-
-
+    
     public function saveTestData()
     {
         $key = $this->getSessionKey();
-        $this->storage->save($key, $this->getTestData()->getData());
+        $this->storage->save($key, $this->getTestProgress());
     }
 
-    public function getTestData($force = false)
+    public function getTestProgress($force = false)
     {
         if (null === $this->testData || $force) {
             $key = $this->getSessionKey();
             $data = $this->storage->restore($key);
 
             if (null === $data) {
-                $data = array();
+                $this->testData = new TestData();
+            } else {
+                $this->testData = $data;
             }
-
-            $this->testData = new TestData($data);
         }
         return $this->testData;
     }
@@ -79,6 +59,14 @@ class Flow
         $this->storage->remove($key);
     }
 
+    /**
+     * @return string
+     */
+    protected function getSessionKey()
+    {
+        return 'test_in_progress';
+    }
+
     public function getStorage()
     {
         return $this->storage;
@@ -86,35 +74,13 @@ class Flow
 
     public function getNextQuestionNumber()
     {
-        $testData = $this->getTestData();
-        $answers = $testData->getAnswers();
-
-        if (!count($answers)) {
-            $nextQuestion = 1;
-        } else {
-            $nextQuestion = count($testData->getAnswers()) + 1;
-        }
-
-        return $nextQuestion;
+        return $this->getTestProgress()->getCurrentQuestion()+1;
     }
 
-    public function update()
+    public function calculateResult(StrategyInterface $strategy)
     {
-        
+        return $strategy->processData($this->getTestProgress()->getAnswers());
     }
     
-    /**
-     * @param $testId
-     * @return mixed
-     */
-    protected function getSessionKey($testId = null)
-    {
-        if (null !== $testId) {
-            $key = sprintf($this->storageKey, $testId);
-        } else {
-            $key = sprintf($this->storageKey, $this->getTestId());
-        }
-        return $key;
-    }
 
 }

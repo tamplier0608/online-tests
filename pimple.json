@@ -320,7 +320,7 @@
     {
         "name": "form.secret",
         "type": "string",
-        "value": "49854d715dd236d3269deba678cc3403"
+        "value": "92bf33e4f730979acd50a8b80c023bda"
     },
     {
         "name": "form.types",
@@ -401,15 +401,5 @@
         "name": "session.storage",
         "type": "class",
         "value": "Symfony\\Component\\HttpFoundation\\Session\\Storage\\NativeSessionStorage"
-    },
-    {
-        "name": "twig.form.engine",
-        "type": "class",
-        "value": "Symfony\\Bridge\\Twig\\Form\\TwigRendererEngine"
-    },
-    {
-        "name": "twig.form.renderer",
-        "type": "class",
-        "value": "Symfony\\Bridge\\Twig\\Form\\TwigRenderer"
     }
 ]

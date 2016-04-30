@@ -82,7 +82,6 @@ class UserController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
             $user = new User();
             $user->username = $form->getData()['username'];
             $user->email = $form->getData()['email'];

@@ -12,18 +12,9 @@ class User extends Entity
     protected static $table = 'users';
     protected static $avoidSaving = array('testResults', 'comments', 'orders');
 
-    protected $testResults;
-    protected $comments;
-    protected $orders;
-
-    public function __construct($id = null)
-    {
-        parent::__construct($id);
-
-        $this->testResults = array();
-        $this->comments = array();
-        $this->orders = array();
-    }
+    protected $testResults = array();
+    protected $comments = array();
+    protected $orders = array();
 
     public function getPassedTests($force = false)
     {

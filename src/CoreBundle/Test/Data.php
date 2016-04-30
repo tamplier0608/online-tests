@@ -2,25 +2,58 @@
 
 namespace CoreBundle\Test;
 
-class Data
+class Data implements \Serializable
 {
     private $result;
-    private $nextQuestion;
+    private $currentQuestion;
     private $answers;
     private $isCompleted;
+    private $userId;
+    private $testId;
     protected $defaultSessionData = array(
         'result' => 0,
-        'next_question' => 1,
+        'current_question' => 1,
         'answers' => array(),
-        'completed' => false
+        'completed' => false,
+        'user_id' => false,
+        'test_id' => false
     );
 
     public function __construct(array $data = array())
     {
-        $this->result = array_key_exists('result', $data) ? $data['result'] : 0;
-        $this->nextQuestion = array_key_exists('next_question', $data) ? $data['next_question'] : 1;
-        $this->answers = array_key_exists('answers', $data) ? $data['answers'] : array();
-        $this->isCompleted = array_key_exists('completed', $data) ? $data['completed'] : false;
+        $this->setData($data);
+    }
+
+    /**
+     * @return bool|mixed
+     */
+    public function getTestId()
+    {
+        return $this->testId;
+    }
+
+    /**
+     * @param bool|mixed $testId
+     */
+    public function setTestId($testId)
+    {
+        $this->testId = $testId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUserId()
+    {
+        return $this->userId;
+    }
+
+    /**
+     * @param mixed $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
     }
 
     public function isEmpty()
@@ -37,7 +70,7 @@ class Data
     }
 
     /**
-     * @param bool $result
+     * @param mixed $result
      */
     public function setResult($result)
     {
@@ -47,17 +80,17 @@ class Data
     /**
      * @return mixed
      */
-    public function getNextQuestion()
+    public function getCurrentQuestion()
     {
-        return $this->nextQuestion;
+        return $this->currentQuestion;
     }
 
     /**
-     * @param mixed $nextQuestion
+     * @param mixed $currentQuestion
      */
-    public function setNextQuestion($nextQuestion)
+    public function setCurrentQuestion($currentQuestion)
     {
-        $this->nextQuestion = (int) $nextQuestion;
+        $this->currentQuestion = (int) $currentQuestion;
     }
 
     /**
@@ -76,7 +109,7 @@ class Data
         $this->answers = $answers;
     }
 
-    public function setAnswer($number, $value)
+    public function saveAnswer($number, $value)
     {
         $this->answers[$number] = $value;
     }
@@ -106,10 +139,42 @@ class Data
     {
         return array(
             'result' => $this->getResult(),
-            'next_question' => $this->getNextQuestion(),
+            'current_question' => $this->getCurrentQuestion(),
             'answers' => $this->getAnswers(),
-            'completed' => $this->isCompleted()
+            'completed' => $this->isCompleted(),
+            'user_id' => $this->getUserId(),
+            'test_id' => $this->getTestId()
         );
     }
+
+    /**
+     * @param array $data
+     */
+    protected function setData(array $data)
+    {
+        $this->result = array_key_exists('result', $data) ? $data['result'] : 0;
+        $this->currentQuestion = array_key_exists('current_question', $data) ? $data['current_question'] : 1;
+        $this->answers = array_key_exists('answers', $data) ? $data['answers'] : array();
+        $this->isCompleted = array_key_exists('completed', $data) ? $data['completed'] : false;
+        $this->userId = array_key_exists('user_id', $data) ? $data['user_id'] : false;
+        $this->testId = array_key_exists('test_id', $data) ? $data['test_id'] : false;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function serialize()
+    {
+        return serialize($this->getData());
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function unserialize($serialized)
+    {
+        $this->setData(unserialize($serialized));
+    }
+
 
 }

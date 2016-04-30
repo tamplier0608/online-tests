@@ -69,6 +69,10 @@ abstract class Repository
         return $rowSet;
     }
 
+    /**
+     * @param $id
+     * @return Core/Db/Entity
+     */
     public function find($id)
     {
         $query = 'SELECT * FROM ' . static::$table . ' WHERE ' . static::$primaryKey . ' = ?';

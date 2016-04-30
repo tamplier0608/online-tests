@@ -1,9 +1,8 @@
 <?php
 
-namespace CoreBundle\Test\Flow\Calculate;
+namespace CoreBundle\Test\Flow\Calculate\Strategy;
 
-
-interface CalculationInterface
+interface StrategyInterface
 {
     public function processData(array $data);
 }

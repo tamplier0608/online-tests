@@ -43,8 +43,6 @@ $app->run();
 
 if ($app['debug']) {
     echo '<pre>';
-    var_dump($app['session']->get('test-1'));
-    var_dump($app['session']->get('test-2'));
-    var_dump($app['session']->get('ref_uri'));
+    var_dump($app['session']->getBag('attributes'));
     echo '</pre>';
 }

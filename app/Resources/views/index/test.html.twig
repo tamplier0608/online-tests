@@ -8,7 +8,7 @@
     </div>
     {% endif %}
 <h2>{{ test.name }}</h2>
-<div>{{ test.description }}</div>
+<div>{{ test.description|raw }}</div>
 <br />
 
     {% if test.isFree() or is_test_purchased(test.id) %}
@@ -22,12 +22,12 @@
                     {% for index, option in question.options %}
                         <li>
                             {% if question.multioption %}
-                                <input type="checkbox" id="option-{{ index }}" name="option[]" value="{{ option.points }}"/>
+                                <input type="checkbox" id="option-{{ index }}" name="option[]" value="{{ option.value }}"/>
                             {% else %}
-                                <input type="radio" id="option-{{ index }}" name="option" value="{{ option.points }}"/>
+                                <input type="radio" id="option-{{ index }}" name="option" value="{{ option.value }}"/>
                             {% endif %}
 
-                            <label for="option-{{ index }}">{{ option.value }}</label>
+                            <label for="option-{{ index }}">{{ option.title }}</label>
                         </li>
                     {% endfor%}
                 </ul>

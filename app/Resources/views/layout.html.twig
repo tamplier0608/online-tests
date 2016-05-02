@@ -32,7 +32,7 @@
                 <nav>
                     <ul class="nav nav-pills pull-right">
                         {#<li role="presentation" class="active"><a href="{{ path('homepage') }}">{{ 'link.homepage'|trans }}</a></li>#}
-                        {% if is_logged_user() %}
+                        {% if is_user_logged() %}
                         <li role="presentation">
                             <div class="dropdown">
                                 <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">

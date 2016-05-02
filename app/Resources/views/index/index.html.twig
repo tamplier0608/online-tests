@@ -16,7 +16,7 @@
             <th>{{ 'title.name'|trans }}</th>
             <th>{{ 'title.description'|trans }}</th>
             <th>{{ 'title.passed_count'|trans }}</th>
-            {% if is_logged_user() %}<th>{{ 'title.passed_status'|trans }}</th>{% endif %}
+            {% if is_user_logged() %}<th>{{ 'title.passed_status'|trans }}</th>{% endif %}
             <th></th>
         </tr>
         {% for test in tests %}
@@ -26,9 +26,9 @@
             <tr style="vertical-align: middle">
                 <td>{{ test.id }}</td>
                 <td>{{ test.name }}</td>
-                <td>{{ test.description }}</td>
+                <td>{{ test.description|raw }}</td>
                 <td style="text-align: center">{{ test.passed }}</td>
-                {% if is_logged_user() %}
+                {% if is_user_logged() %}
                 <td style="text-align: center">
                     {% if not isTestFree and isTestPurchased %}<span style="color:red">{{ 'test.is_purсhased'|trans }}</span><br /><br />{% endif %}
                     <span style="color:green">{% if isTestPassed %}{{ 'test.passed.yes'|trans }}{% else %}{{ 'test.passed.no'|trans }}{% endif %}</span>

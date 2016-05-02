@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS tests (
 CREATE TABLE IF NOT EXISTS test_questions (
     id INTEGER(10) AUTO_INCREMENT NOT NULL,
     value VARCHAR(255) NOT NULL,
-    test_id INTEGER NOT NULL,
+    test_id INTEGER(10)  NOT NULL,
     `index` INTEGER(10) NOT NULL,
     multioption TINYINT NOT NULL DEFAULT 0,
     PRIMARY KEY(id),
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS test_options (
     id INTEGER(10) AUTO_INCREMENT NOT NULL,
     value VARCHAR(255) NOT NULL,
     points INTEGER(10) NOT NULL DEFAULT 0,
-    question_id INTEGER NOT NULL,
+    question_id INTEGER(10)  NOT NULL,
     `index` INTEGER(10) NOT NULL,
     PRIMARY KEY(id),
     FOREIGN KEY (question_id) REFERENCES test_questions(id) ON DELETE CASCADE
@@ -30,10 +30,12 @@ CREATE TABLE IF NOT EXISTS test_options (
 
 CREATE TABLE IF NOT EXISTS test_results (
     id INTEGER(10) AUTO_INCREMENT NOT NULL,
-    test_id INTEGER NOT NULL,
-    min_points INTEGER NOT NULL,
-    max_points INTEGER NOT NULL,
+    test_id INTEGER(10)  NOT NULL,
+    min_points INTEGER(10)  NOT NULL,
+    max_points INTEGER(10)  NOT NULL,
+    title VARCHAR(255),
     description TEXT NOT NULL,
+    variant VARCHAR(10) DEFAULT NULL,
     PRIMARY KEY(id),
     FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE
 ) ENGINE = InnoDb DEFAULT CHARSET = UTF8;

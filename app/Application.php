@@ -1,18 +1,16 @@
 <?php
 
-use CoreBundle\Db\Adapter\DoctrineDbal;
-use CoreBundle\Test\Flow as TestFlow;
 use Igorw\Silex\ConfigServiceProvider;
 use MJanssen\Provider\RoutingServiceProvider;
 use Silex\Application as SilexCoreApplication;
 use Silex\Provider\DoctrineServiceProvider;
+use Silex\Provider\FormServiceProvider;
 use Silex\Provider\SessionServiceProvider;
 use Silex\Provider\TranslationServiceProvider;
 use Silex\Provider\TwigServiceProvider;
 use Silex\Provider\UrlGeneratorServiceProvider;
-use Symfony\Component\Translation\Loader\YamlFileLoader;
-use Silex\Provider\FormServiceProvider;
 use Silex\Provider\ValidatorServiceProvider;
+use Symfony\Component\Translation\Loader\YamlFileLoader;
 
 class Application extends SilexCoreApplication
 {
@@ -110,7 +108,7 @@ class Application extends SilexCoreApplication
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('is_test_in_progress', function($testId) use($app) {
-                $testFlow = new TestFlow(new \CoreBundle\Test\Storage\Session($app['session']));
+                $testFlow = new CoreBundle\Test\Flow(new \CoreBundle\Test\Storage\Session($app['session']));
 
                 if (
                     false === $testFlow->getTestProgress()->isEmpty()
@@ -123,7 +121,7 @@ class Application extends SilexCoreApplication
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('display_test_in_progress', function($testId) use($app) {
-                $testFlow = new TestFlow(new \CoreBundle\Test\Storage\Session($app['session']));
+                $testFlow = new \CoreBundle\Test\Flow(new \CoreBundle\Test\Storage\Session($app['session']));
 
                 $testRepository = new \AppBundle\Entity\Repository\Tests();
                 $test = $testRepository->find($testId);
@@ -134,16 +132,16 @@ class Application extends SilexCoreApplication
                 return sprintf('%d / %d (%d%%)', $complete, $all, $percent);
             }));
 
-            $twig->addFunction(new Twig_SimpleFunction('is_logged_user', function() use($app) {
-                return $app['session']->has('user');
+            $twig->addFunction(new Twig_SimpleFunction('is_user_logged', function() use($app) {
+                return $app->isUserLogged();
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('get_user', function() use($app) {
-                return $app['session']->has('user') ? $this['session']->get('user')[0] : false;
+                return $app->getUser();
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('is_test_passed', function($testId) use($app) {
-                $user = $this['session']->get('user')[0];
+                $user = $app->getUser();
 
                 if (!$user) {
                     return false;
@@ -153,7 +151,7 @@ class Application extends SilexCoreApplication
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('is_test_purchased', function($testId) use($app) {
-                $user = $app['session']->has('user') ? $this['session']->get('user')[0] : false;
+                $user = $app->getUser();
 
                 if (!$user) {
                     return false;
@@ -199,8 +197,8 @@ class Application extends SilexCoreApplication
             'db.options' => $this['db.options']
         ));
 
-        CoreBundle\Db\Entity::setDefaultDbConnection(new DoctrineDbal($this['db']));
-        CoreBundle\Db\Repository::setDefaultDbConnection(new DoctrineDbal($this['db']));
+        CoreBundle\Db\Entity::setDefaultDbConnection(new \CoreBundle\Db\Adapter\DoctrineDbal($this['db']));
+        CoreBundle\Db\Repository::setDefaultDbConnection(new \CoreBundle\Db\Adapter\DoctrineDbal($this['db']));
     }
 
     protected function bootstrapForms() {
@@ -216,5 +214,20 @@ class Application extends SilexCoreApplication
         $this['swiftmailer'] = $this->share(function() {
             return new \Swift_Mailer(new \Swift_MailTransport());
         });
+    }
+
+    public function getUser()
+    {
+        $userId = $this['session']->get('user');
+
+        if (null !== $userId) {
+            return new \AppBundle\Entity\User($userId);
+        }
+        return false;
+    }
+
+    public function isUserLogged()
+    {
+        return $this['session']->has('user');
     }
 }

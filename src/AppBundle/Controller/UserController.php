@@ -7,8 +7,8 @@ use AppBundle\Entity\Repository\Orders;
 use AppBundle\Entity\Repository\Tests;
 use AppBundle\Entity\Repository\Users;
 use AppBundle\Entity\User;
-use CoreBundle\Auth\Auth;
 use CoreBundle\Auth\Adapter\DbTable;
+use CoreBundle\Auth\Auth;
 use CoreBundle\Db\Adapter\DoctrineDbal;
 use CoreBundle\Form\Constraints as CoreAssert;
 use Doctrine\Common\Proxy\Exception\InvalidArgumentException;
@@ -37,9 +37,8 @@ class UserController
 
             if ($auth->authorize($username, $password, $app['salt'])) {
                 $userRepository = new Users();
-                $user = $userRepository->findBy(array('username=?'), array($username));
-                unset($user->password);
-                $app['session']->set('user', $user);
+                $user = $userRepository->findBy(array('username=?'), array($username))[0];
+                $app['session']->set('user', $user->id);
 
                 return $app->redirect($this->getRefUri($app));
             } else {
@@ -74,7 +73,7 @@ class UserController
 
     public function signinAction(Request $request, \Application $app)
     {
-        if ($this->isLoggedUser($app)) {
+        if ($app->isUserLogged()) {
             return $this->redirectToRefUriWithMessage($app, 'flashes.is_logged_user', 'warning');
         }
 
@@ -171,7 +170,7 @@ class UserController
 
     public function logoutAction(Request $request, \Application $app)
     {
-        if (!$this->isLoggedUser($app)) {
+        if (!$app->isUserLogged()) {
             return $this->redirectToRefUriWithMessage($app, 'flashes.is_not_logged', 'warning');
         }
 
@@ -183,9 +182,11 @@ class UserController
 
     public function cabinetAction(Request $request, \Application $app)
     {
-        if (!$user = $this->isLoggedUser($app)) {
+        if (!$app->isUserLogged()) {
             return $app->redirect($app['url_generator']->generate('homepage'));
         }
+
+        $user = $app->getUser();
 
         return $app['twig']->render('user/cabinet.html.twig', array(
             'orders' => $user->getOrders(),
@@ -224,12 +225,13 @@ class UserController
 
     public function buyAction(Request $request, \Application $app)
     {
-        if (!$user = $this->isLoggedUser($app)) {
+        if (!$app->isUserLogged()) {
             $request->getSession()->getFlashBag()->set('warning', $app['translator']->trans('user.need_login_or_signin'));
             $request->getSession()->set('ref_uri', $request->server->get('REQUEST_URI'));
             return $app->redirect($app['url_generator']->generate('user_login'));
         }
 
+        $user = $app->getUser();
         $refUri = $app['url_generator']->generate('homepage');
 
         $testId = $request->get('test_id');

@@ -1,9 +1,9 @@
 {% extends 'layout.html.twig' %}
 
 {% block content %}
-<h1>{{ 'result.points'|trans({'%points%': result.points}) }}</h1>
-<h2>{{ 'result.description'|trans }}</h2>
-<p>{{ result.description }}</p>
+<h1>{{ 'result.description'|trans }}</h1>
+<h2>{% if result.title %}{{ result.title }}{% endif %}</h2>
+<p>{{ result.description|raw }}</p>
 <br />
 <p><a href="{{ path('homepage') }}"><i class="glyphicon glyphicon-arrow-left"></i> {{ 'back'|trans }}</a></p>
 {% endblock %}

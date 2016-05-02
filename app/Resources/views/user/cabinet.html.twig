@@ -15,16 +15,14 @@
             <table class="table table-bordered table-striped table-hover">
                 <tr>
                     <th>{{ 'cabinet.label.test'|trans }}</th>
-                    <th>{{ 'cabinet.label.points'|trans }}</th>
                     <th>{{ 'cabinet.label.passed_at'|trans }}</th>
                     <th>{{ 'cabinet.label.result'|trans }}</th>
                 </tr>
                 {% for passedTest in passedTests %}
                     <tr>
                         <td>{{ passedTest.getTestResult().getTest().name }}</td>
-                        <td>{{ passedTest.points }}</td>
                         <td>{{ passedTest.passed_at }}</td>
-                        <td>{{ passedTest.getTestResult().description }}</td>
+                        <td>{{ passedTest.getTestResult().description|raw }}</td>
                     </tr>
                 {% endfor %}
             </table>

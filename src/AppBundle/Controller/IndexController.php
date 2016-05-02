@@ -2,15 +2,15 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Repository\Test\Results as TestResults;
 use AppBundle\Entity\Repository\Tests;
 use AppBundle\Entity\Test;
 use AppBundle\Entity\User\PassedTest;
-use CoreBundle\Test\Storage\Session;
 use CoreBundle\Test\Flow as TestFlow;
+use CoreBundle\Test\Storage\Session;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use CoreBundle\Test\Flow\Calculate\Strategy\TotalWeight;
 
 class IndexController
 {
@@ -34,7 +34,7 @@ class IndexController
         $testFlow = $this->getTestFlow($app);
         
         $testData = $testFlow->getTestProgress();
-        $user = $this->isLoggedUser($app);
+        $user = $app->getUser();
 
         if ($testData->isEmpty() or $testData->isCompleted()) {
             $userId = $user ? $user->id : false;
@@ -78,7 +78,7 @@ class IndexController
     {
         $testId = $request->get('id');
         $testFlow = $this->getTestFlow($app);
-        $user = $this->isLoggedUser($app);
+        $user = $app->getUser();
 
         if ($user && !$testFlow->getTestProgress()->getUserId()) {
             $testFlow->getTestProgress()->setUserId($user->id);
@@ -123,8 +123,8 @@ class IndexController
                 $testFlow->getTestProgress()->setResult($testResult);
                 $testFlow->getTestProgress()->setCompleted(true);
 
-                $this->updatePassedOfTest($testId);
-                $this->savePassedTestRecord($testFlow, $testId);
+                $this->updatePassedOfTest($test);
+                $this->savePassedTestRecord($testFlow, $test);
             }
 
             return $app->redirect($app['url_generator']->generate('result_page', array('id' => $testId)));
@@ -142,27 +142,23 @@ class IndexController
         ));
     }
 
-    protected function updatePassedOfTest($testId)
+    protected function updatePassedOfTest(Test $test)
     {
-        $test = new Test($testId);
         $test->passed = $test->passed + 1;
-        $test->save();
     }
 
-    protected function savePassedTestRecord(TestFlow $testFlow, $testId)
+    protected function savePassedTestRecord(TestFlow $testFlow, Test $test)
     {
-        $points = $testFlow->getTestProgress()->getResult();
-        $testResultsRepository = new TestResults();
-        $testResult = $testResultsRepository->getDescriptionByPoints($testId, $points);
-
+        $resultValue = $testFlow->getTestProgress()->getResult();
+        $testResult = $this->getTestResult($test, $resultValue);
         $userId = $testFlow->getTestProgress()->getUserId();
 
         if ($userId) {
             $passedTest = new PassedTest();
             $passedTest->user_id = $userId;
             $passedTest->result_id = $testResult->id;
-            $passedTest->points = $points;
-            $passedTest->test_id = $testId;
+            $passedTest->result_value = $resultValue;
+            $passedTest->test_id = $test->id;
             $passedTest->test_data = serialize($testFlow->getTestProgress());
 
             $now = new \DateTime();
@@ -175,21 +171,38 @@ class IndexController
     public function finishTestAction(Request $request, \Application $app)
     {
         $testId = $request->get('id');
-        $testFlow = $this->getTestFlow($app);
 
-        $points = $testFlow->getTestProgress()->getResult();
-        $testResultsRepository = new TestResults();
-        $testResult = $testResultsRepository->getDescriptionByPoints($testId, $points);
+        try {
+            $test = new Test($testId);
+        } catch(Exception $e) {
+            if ($app['debug']) {
+                throw new $e;
+            }
+            return new HttpException(404, 'Запрощенный тест не найден');
+        }
+
+        $testFlow = $this->getTestFlow($app);
+        $resultValue = $testFlow->getTestProgress()->getResult();
+        $testResult = $this->getTestResult($test, $resultValue);
 
         if (!$testResult) {
             return $app->redirect($app['url_generator']->generate('homepage'));
         }
 
-        $testResult['points'] = $points;
-
         return $app['twig']->render('index/result.html.twig', array(
             'result' => $testResult,
         ));
+    }
+
+    /**
+     * @param Test $test
+     * @param $resultValue
+     * @return Test\Result|bool
+     */
+    private function getTestResult(Test $test, $resultValue)
+    {
+        $resultResolver = new TestFlow\Result\Resolver();
+        return $resultResolver->resolve($resultValue, $test);
     }
 
     /**
@@ -243,9 +256,5 @@ class IndexController
             $this->testFlow = new TestFlow(new Session($app['session']));
         }
         return $this->testFlow;
-    }
-
-    private function isLoggedUser($app) {
-        return $app['session']->get('user')[0];
     }
 }

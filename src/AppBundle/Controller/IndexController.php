@@ -145,6 +145,7 @@ class IndexController
     protected function updatePassedOfTest(Test $test)
     {
         $test->passed = $test->passed + 1;
+        $test->save();
     }
 
     protected function savePassedTestRecord(TestFlow $testFlow, Test $test)

@@ -12,7 +12,6 @@
     {% if tests %}
     <table class="table table-bordered table-hover table-striped test-list">
         <tr>
-            <th>{{ 'title.id'|trans }}</th>
             <th style="width: 200px;">{{ 'title.name'|trans }}</th>
             <th style="width: 300px;">{{ 'title.description'|trans }}</th>
             <th>{{ 'title.passed_count'|trans }}</th>
@@ -24,7 +23,6 @@
             {% set isTestFree = test.isFree() %}
             {% set isTestPurchased = is_test_purchased(test.id) %}
             <tr style="vertical-align: middle">
-                <td>{{ test.id }}</td>
                 <td>{{ test.name }}</td>
                 <td>{{ test.description|raw }}</td>
                 <td style="text-align: center">{{ test.passed }}</td>

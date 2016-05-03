@@ -60,9 +60,9 @@ abstract class Repository
      * @param bool|string $limit
      * @return mixed
      */
-    public function fetchAll($limit = false)
+    public function fetchAll($limit = false, $orderBy = false)
     {
-        $sql = $this->buildFetchAllQuery($limit);
+        $sql = $this->buildFetchAllQuery($limit, $orderBy);
         $sth = $this->executeQuery($sql);
         $rowSet = $this->fetchResultInRowset($sth);
 
@@ -105,14 +105,19 @@ abstract class Repository
     }
 
     /**
-     * @param $limit
+     * @param string $limit
+     * @param string $orderBy
      * @return mixed
      */
-    protected function buildFetchAllQuery($limit = false)
+    protected function buildFetchAllQuery($limit = false, $orderBy = false)
     {
         $sql = 'SELECT * FROM `' . static::$table . '`';
         if (false !== $limit) {
             $sql .= ' LIMIT ' . $limit;
+        }
+
+        if ($orderBy) {
+            $sql .= ' ORDER BY ' . $orderBy;
         }
 
         return $sql;

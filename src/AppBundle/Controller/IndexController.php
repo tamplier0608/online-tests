@@ -21,7 +21,7 @@ class IndexController
         $testsRepository = new Tests();
 
         return $app['twig']->render('index/index.html.twig', array(
-            'tests' => $testsRepository->fetchAll()
+            'tests' => $testsRepository->fetchAll($limit = false, $orderBy = ' passed DESC')
         ));
     }
 

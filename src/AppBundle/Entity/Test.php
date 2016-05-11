@@ -24,7 +24,12 @@ class Test extends Entity
     {
         if (empty($this->questions) || $force) {
             $testOptionsRepository = new TestQuestions();
-            $this->questions = $testOptionsRepository->findBy(array('test_id=?'), array($this->id));
+            $this->questions = $testOptionsRepository->findBy(
+                array('test_id=?'),
+                array($this->id),
+                $limit = false,
+                $orderBy = '`index` ASC'
+            );
         }
         return $this->questions;
     }

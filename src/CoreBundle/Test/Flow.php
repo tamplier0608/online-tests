@@ -2,9 +2,9 @@
 
 namespace CoreBundle\Test;
 
+use CoreBundle\Test\Data as TestData;
 use CoreBundle\Test\Flow\Calculate\Strategy\StrategyInterface;
 use CoreBundle\Test\Storage\StorageInterface;
-use CoreBundle\Test\Data as TestData;
 
 /**
  * Class Flow
@@ -24,7 +24,7 @@ class Flow
     public function initTestData($testId, $userId = false)
     {
         $key = $this->getSessionKey();
-        $this->storage->save($key, new TestData(array('test_id' => $testId, 'user_id' => $userId)));
+        $this->storage->save($key, serialize(new TestData(array('test_id' => $testId, 'user_id' => $userId))));
     }
 
     public function isTestDataInitialized()
@@ -35,7 +35,7 @@ class Flow
     public function saveTestData()
     {
         $key = $this->getSessionKey();
-        $this->storage->save($key, $this->getTestProgress());
+        $this->storage->save($key, serialize($this->getTestProgress()));
     }
 
     public function getTestProgress($force = false)
@@ -43,6 +43,10 @@ class Flow
         if (null === $this->testData || $force) {
             $key = $this->getSessionKey();
             $data = $this->storage->restore($key);
+
+            if (!empty($data)) {
+                $data = unserialize($data);
+            }
 
             if (null === $data) {
                 $this->testData = new TestData();

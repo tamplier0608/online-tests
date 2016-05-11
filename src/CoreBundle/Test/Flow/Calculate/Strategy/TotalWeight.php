@@ -11,9 +11,11 @@ class TotalWeight implements StrategyInterface
         foreach ($data as $index => $value) {
             if (is_array($value)) {
                 foreach ($value as $v) {
+                    $v = explode('-', $v)[1];
                     $totalWeight += $v;
                 }
             } else {
+                $value = explode('-', $value)[1];
                 $totalWeight += $value;
             }
         }

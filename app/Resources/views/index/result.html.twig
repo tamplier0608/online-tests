@@ -2,8 +2,61 @@
 
 {% block content %}
 <h1>{{ 'result.description'|trans }}</h1>
-<h2>{% if result.title %}{{ result.title }}{% endif %}</h2>
+<h2>{% if result.title %}{{ result.title }}{% endif %}
+    {% if right_answers is defined %}
+    ({{ 'result.points'|trans({'%count%': resultValue, '%all%': users_answers|length}) }})
+    {% endif %}
+</h2>
 <p>{{ result.description|raw }}</p>
+
+    {% if users_answers %}
+        <a id="show-answers" href="javascript:void(0)">{{ 'test.show_answers'|trans }}</a>
+        <div id="test-answers">
+            {% for answer in users_answers %}
+
+                {% set border_color = 'success' %}
+                {% set right = true %}
+
+                {% if right_answers is defined and answer.option_value != right_answers[answer.question_number - 1].option_value %}
+                    {% set right = false %}
+                    {% set border_color = 'danger' %}
+                {% endif %}
+
+                <div class="alert alert-{{ border_color }}">
+                    <p><strong>{{ 'test.answer_number'|trans({'%n%': answer.question_number}) }}</strong> {{ answer.question_title }}</p>
+                    <p><strong>{{ 'test.user_option'|trans}}</strong> {{ answer.option_title }}</p>
+
+                    {% if right_answers is defined and not right %}
+                        <p><strong><span style="color: green">{{ 'test.answer_right'|trans }}</span></strong> {{ right_answers[answer.question_number - 1].option_title }}</p>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 <br />
 <p><a href="{{ path('homepage') }}"><i class="glyphicon glyphicon-arrow-left"></i> {{ 'back'|trans }}</a></p>
 {% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script>
+        (function() {
+            var $link = $('#show-answers');
+
+            $link.on('click', '', [], function() {
+                var $block = $('#test-answers');
+
+                if ($block.is(':hidden')) {
+                    $block.show();
+                    $(this).html('{{ 'test.hide_answers'|trans }}')
+                } else {
+                    $block.hide();
+                    $(this).html('{{ 'test.show_answers'|trans }}')
+                }
+            });
+        })();
+    </script>
+
+{% endblock javascripts %}

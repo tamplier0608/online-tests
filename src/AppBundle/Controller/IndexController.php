@@ -2,10 +2,15 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Repository\Categories;
+use AppBundle\Entity\Repository\Test\Options;
 use AppBundle\Entity\Repository\Tests;
+use AppBundle\Entity\Repository\User\PassedTests;
 use AppBundle\Entity\Test;
 use AppBundle\Entity\User\PassedTest;
+use CoreBundle\Db\Repository;
 use CoreBundle\Test\Flow as TestFlow;
+use CoreBundle\Test\Flow\Calculate\Strategy\NumberCorrectAnswers;
 use CoreBundle\Test\Storage\Session;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,15 +19,95 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class IndexController
 {
+    const TESTS_PER_PAGE = 4;
     protected $testFlow;
 
     public function indexAction(Request $request, \Application $app)
     {
-        $testsRepository = new Tests();
+        $page = $request->get('page', 1);
+        $testRepository = new Tests();
 
+        $tests = $this->getIndexPagination($testRepository, $page, self::TESTS_PER_PAGE);
+        
         return $app['twig']->render('index/index.html.twig', array(
-            'tests' => $testsRepository->fetchAll($limit = false, $orderBy = ' passed DESC')
+            'pagination' => $tests
         ));
+    }
+
+    private function getIndexPagination(Repository $repository, $page, $countPerPage)
+    {
+        $countAll = $repository->countAll();
+        $paginationData = $this->getPaginationParams($page, $countPerPage, $countAll);
+        $limit = $paginationData['start'] . ', ' . $countPerPage;
+        $rowset = $repository->fetchAll($limit, $orderBy = ' passed DESC, id DESC');
+
+        return array_merge($paginationData, array('data' => $rowset));
+    }
+
+    public function showCategoryAction(Request $request, \Application $app)
+    {
+        $catId = $request->get('id');
+        $catRepository = new Categories();
+        $cat = $catRepository->find($catId);
+
+        if (false === $cat) {
+            throw new HttpException(404, 'Category is not found');
+        }
+
+        $testRepository = new Tests();
+        $page = $request->get('page', 1);
+        $tests = $this->getCatPagination($testRepository, $catId, $page, self::TESTS_PER_PAGE);
+
+        return $app['twig']->render('index/show-category.html.twig', array(
+            'cat' => $cat,
+            'pagination' => $tests
+        ));
+    }
+
+    private function getCatPagination(Repository $repository, $catId, $page, $countPerPage)
+    {
+        $countAll = $repository->countAll(array('category_id = ?'), array($catId));
+        $paginationData = $this->getPaginationParams($page, $countPerPage, $countAll);
+        $limit = $paginationData['start'] . ', ' . $countPerPage;
+        $rowset = $repository->findBy(array('category_id = ?'), array($catId), $limit, $orderBy = ' passed DESC, passed DESC');
+
+        return array_merge($paginationData, array('data' => $rowset));
+    }
+
+    private function getPaginationParams($page, $countPerPage, $countAll)
+    {
+        $countPages = (int) ceil($countAll / $countPerPage);
+
+        if ($countPages && $page > $countPages) {
+            throw new HttpException(404, 'Page is not found');
+        }
+
+        $start = ($page - 1) * $countPerPage;
+
+        if ($start <= 0) {
+            $start = 0;
+        }
+
+        $next = false;
+        $prev = false;
+
+        if ($page < $countPages && $countPages > 1) {
+            $next = $page + 1;
+        }
+
+        if ($page > 1) {
+            $prev = $page - 1;
+        }
+
+        return array(
+            'start' => $start,
+            'countPerPage' => $countPerPage,
+            'countPages' => $countPages,
+            'countAll' => $countAll,
+            'next' => $next,
+            'prev' => $prev
+        );
+
     }
 
     /**
@@ -58,7 +143,13 @@ class IndexController
             $nextQuestion = $testFlow->getTestProgress()->getCurrentQuestion();
         }
 
-        list($test, $question) = $this->getQuestionData($testId, $nextQuestion);
+        $questionData = $this->getQuestionData($testId, $nextQuestion);
+
+        if (false === $questionData) {
+            throw new NotFoundHttpException($app['translator']->trans('test.no_questions'));
+        }
+
+        list($test, $question) = $questionData;
 
         if (empty($test)) {
             throw new NotFoundHttpException($app['translator']->trans('test.not_found'));
@@ -108,6 +199,7 @@ class IndexController
             echo 'Prev question in request: ' . var_export($prevQuestion, true) . '<br />';
             echo 'Current question in SESSION: ' . var_export($testFlow->getTestProgress()->getCurrentQuestion(), true) . '<br />';
             echo 'Last answered question: ' . var_export(count($answers), true) . '<br />';
+            echo 'Test data: ' . var_export($testFlow->getTestProgress()->getAnswers(), true);
             echo '</pre>';
         }
 
@@ -122,6 +214,7 @@ class IndexController
                 $testResult = $testFlow->calculateResult($test->getCalcStrategy());
                 $testFlow->getTestProgress()->setResult($testResult);
                 $testFlow->getTestProgress()->setCompleted(true);
+                $testFlow->saveTestData();
 
                 $this->updatePassedOfTest($test);
                 $this->savePassedTestRecord($testFlow, $test);
@@ -135,6 +228,8 @@ class IndexController
         if (empty($test)) {
             throw new NotFoundHttpException($app['translator']->trans('test.not_found'));
         }
+
+        $testFlow->saveTestData();
 
         return $app['twig']->render('index/test.html.twig', array(
             'test' => $test,
@@ -182,17 +277,71 @@ class IndexController
             return new HttpException(404, 'Запрощенный тест не найден');
         }
 
-        $testFlow = $this->getTestFlow($app);
-        $resultValue = $testFlow->getTestProgress()->getResult();
+        $user = $app->getUser();
+
+        if ($user) { # if user is logged in or request test result from cabinet get data from record of passed test
+            $passedTestRepository = new PassedTests();
+            $passedTest = $passedTestRepository->findBy(array('user_id = ?', 'test_id = ?'), array($user->id, $test->id))[0];
+
+            if (false === $passedTest) {
+                $app->redirect($app['url_generator']->generate('home'));
+            }
+
+            $testData = unserialize($passedTest->test_data);
+            $resultValue = $testData->getResult();
+            $answers = $testData->getAnswers();
+        } else {
+            $testFlow = $this->getTestFlow($app);
+            $resultValue = $testFlow->getTestProgress()->getResult();
+            $answers = $testFlow->getTestProgress()->getAnswers();
+        }
+
         $testResult = $this->getTestResult($test, $resultValue);
 
-        if (!$testResult) {
+        if (!$testResult || empty($answers) || empty($resultValue)) {
             return $app->redirect($app['url_generator']->generate('homepage'));
         }
 
-        return $app['twig']->render('index/result.html.twig', array(
+        $viewData = array(
+            'resultValue' => $resultValue,
             'result' => $testResult,
-        ));
+            'users_answers' => $this->getAnswersData($test->id, $answers)
+        );
+
+        if ($test->getCalcStrategy() instanceof NumberCorrectAnswers) {
+            $optionsRepository = new Options();
+            $viewData['right_answers'] = $optionsRepository->getRightAnswersForTest($test->id);
+        }
+
+        return $app['twig']->render('index/result.html.twig', $viewData);
+    }
+
+    private function getAnswersData($testId, array $answers)
+    {
+        $data = array();
+        $test = new Test($testId);
+        $questions = $test->getQuestions();
+
+        foreach ($answers as $qNumber => $answer) {
+            if (false === array_key_exists($qNumber - 1, $questions)) {
+                continue;
+            }
+            $question = $questions[$qNumber - 1];
+            $options = $question->getOptions();
+
+            $answerData = explode('-', $answer);
+            $optionIndex = $answerData[0];
+            $option = $options[$optionIndex - 1];
+
+            $data[] = array(
+                'question_number' => $qNumber,
+                'question_title' => $question->value,
+                'option_index' => $option->index,
+                'option_title' => $option->title,
+                'option_value' => $option->value
+            );
+        }
+        return $data;
     }
 
     /**
@@ -216,7 +365,6 @@ class IndexController
     {
         $testRepository = new Tests();
         $test = $testRepository->find($id);
-
         $questions = $test->getQuestions();
         $questionCount = count($questions);
 

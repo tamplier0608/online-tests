@@ -190,7 +190,7 @@ class UserController
 
         return $app['twig']->render('user/cabinet.html.twig', array(
             'orders' => $user->getOrders(),
-            'passedTests' => $user->getPassedTests($force = true),
+            'passedTests' => $user->getPassedTests(),
         ));
     }
 
@@ -298,7 +298,7 @@ class UserController
 
     public function addcreditAction(Request $request, \Application $app)
     {
-        if (!$user = $this->isLoggedUser($app)) {
+        if (!$user = $app->getUser()) {
             return $this->redirectToRefUriWithMessage($app, 'user.need_login_or_signin', 'danger');
         }
 
@@ -352,10 +352,6 @@ class UserController
         } else {
             return $this->redirectToRefUriWithMessage($app, 'Ошибка при попытке очистить данные', 'danger');
         }
-    }
-
-    private function isLoggedUser($app) {
-        return $app['session']->has('user') ? $app['session']->get('user')[0] : false;
     }
 
     private function getRefUri($app) {

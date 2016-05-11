@@ -37,6 +37,14 @@ return array(
             'assert' => array('id' => '^[\d]+$'),
         ),
 
+        array(
+            'name' => 'category_show',
+            'pattern' => '/cat/{id}',
+            'controller' => 'AppBundle\Controller\IndexController::showCategoryAction',
+            'method' => 'get',
+            'assert' => array('id' => '^[\d]+$'),
+        ),
+
         # user routes
         array(
             'name' => 'user_login',

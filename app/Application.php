@@ -120,16 +120,23 @@ class Application extends SilexCoreApplication
                 return false;
             }));
 
+            $twig->addFunction(new Twig_SimpleFunction('get_test_in_progress', function() use($app) {
+                return $this->getTestInProgress();
+            }));
+
             $twig->addFunction(new Twig_SimpleFunction('display_test_in_progress', function($testId) use($app) {
                 $testFlow = new \CoreBundle\Test\Flow(new \CoreBundle\Test\Storage\Session($app['session']));
 
                 $testRepository = new \AppBundle\Entity\Repository\Tests();
                 $test = $testRepository->find($testId);
                 $all = count($test->getQuestions());
-                $complete = count($testFlow->getTestProgress()->getAnswers());
-                $percent = $complete * 100 / $all;
 
-                return sprintf('%d / %d (%d%%)', $complete, $all, $percent);
+                if (0 !== $all) {
+                    $complete = count($testFlow->getTestProgress()->getAnswers());
+                    $percent = $complete * 100 / $all;
+                    return sprintf('%d / %d (%d%%)', $complete, $all, $percent);
+                }
+
             }));
 
             $twig->addFunction(new Twig_SimpleFunction('is_user_logged', function() use($app) {
@@ -159,6 +166,11 @@ class Application extends SilexCoreApplication
 
                 $orderRepository = new \AppBundle\Entity\Repository\Orders();
                 return $orderRepository->isTestPurchasedByUser($testId, $user->id);
+            }));
+
+            $twig->addFunction(new Twig_SimpleFunction('get_categories', function() use($app) {
+                $categoryRepository = new \AppBundle\Entity\Repository\Categories();
+                return $categoryRepository->fetchAll($limit = false, 'position');
             }));
 
             return $twig;
@@ -229,5 +241,95 @@ class Application extends SilexCoreApplication
     public function isUserLogged()
     {
         return $this['session']->has('user');
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    public function getTestInProgress()
+    {
+        $testInProgress = $this['session']->get('test_in_progress');
+
+        if (empty($testInProgress)) {
+            return false;
+        }
+        $testInProgress = unserialize($testInProgress);
+
+        if ($testInProgress->isCompleted()) {
+            return false;
+        }
+
+        $testId = $testInProgress->getTestId();
+
+        $testRepository = new \AppBundle\Entity\Repository\Tests();
+        $test = $testRepository->find($testId);
+
+        if (!$test) {
+            return false;
+        }
+
+        return $test;
     }
 }

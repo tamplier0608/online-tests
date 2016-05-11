@@ -1,5 +1,4 @@
 homepage:
-    title: Все тесты
     no_tests: Приносим свои извинения, но тесты ещё не добавлены
 
 title:
@@ -10,16 +9,21 @@ title:
     passed_status: Статус
     login: Вход
     registration: Регистрация
+    categories: Категории
+    active_test: Активный тест
+    all_tests: Все тесты
+    all_tests_in_cat: Все тесты категории "%title%"
 
 continue_test: Продолжить
 cancel_test: Сбросить результат
 passed: Пройден %count% раз
 next: Дальше
 back: На главную
+read_more: Подробнее ...
 
 result:
     description: Описание результата
-    points: "Результат"
+    points: "%count% из %all% баллов"
 
 error:
     404: Запрошенной страницы не существует
@@ -30,12 +34,19 @@ error:
 test:
     result_success: Тест успешно пройден!
     not_found: Запрошенный тест не найден!
+    no_questions: Запрошенный тест не содержит вопросов!
     canceled: Прогресс по тесту "%title%" успешно аннулирован.
     start_again: Вы можете пройти его еще раз, перейдя по <a href="%link%">ссылке</a>
     confirm_cancel: Прогресс по тесту будет утерян. Продолжить?
     is_paid: Для прохождения теста, его необходимо купить.
     is_already_passed: Вы уже проходили этот тест. Результат будет обновлен.
     test_in_progress_found: У вас уже есть один активный тест. Для прохождения другого теста, завершите начатый тест.
+    show_answers: Показать ответы
+    hide_answers: Скрыть ответы
+
+    answer_number: Вопрос %n%:
+    user_option: Ваш ответ:
+    answer_right: Правильный ответ:
 
     do_test: Пройти
     do_test_again: Пройти снова
@@ -43,6 +54,10 @@ test:
         yes: пройден
         no: не пройден
     is_purсhased: куплен
+
+pagination:
+    next: 'Дальше &raquo;'
+    prev: '&laquo; Раньше'
 
 link:
     homepage: Главная
@@ -90,7 +105,7 @@ email:
     activation:
         subject: Активация учетной записи Psycho Tests
         body: "Благодарим за регистрацию! В подарок вам начислено $10 на кошелек.\n\nДля активации учетной записи перейдите по ссылке: {{ link }}"
-        from: psycho.tests@vseoweb.in.ua
+        from: school.tests@vseoweb.in.ua
 
 cabinet:
     no_records: Нет записей

@@ -22,12 +22,12 @@
                     {% for index, option in question.options %}
                         <li>
                             {% if question.multioption %}
-                                <input type="checkbox" id="option-{{ index }}" name="option[]" value="{{ option.value }}"/>
+                                <input type="checkbox" id="option-{{ option.index }}" name="option[]" value="{{ option.index }}-{{ option.value }}"/>
                             {% else %}
-                                <input type="radio" id="option-{{ index }}" name="option" value="{{ option.value }}"/>
+                                <input type="radio" id="option-{{ option.index }}" name="option" value="{{ option.index }}-{{ option.value }}"/>
                             {% endif %}
 
-                            <label for="option-{{ index }}">{{ option.title }}</label>
+                            <label for="option-{{ option.index }}">{{ option.title }}</label>
                         </li>
                     {% endfor%}
                 </ul>

@@ -22,7 +22,10 @@
                     <tr>
                         <td>{{ passedTest.getTestResult().getTest().name }}</td>
                         <td>{{ passedTest.passed_at }}</td>
-                        <td>{{ passedTest.getTestResult().description|raw }}</td>
+                        <td>
+                            {{ passedTest.getTestResult().description|raw }}
+                            <a target="_blank" href="{{ path('result_page', {'id': passedTest.getTestResult().test_id}) }}">{{ 'read_more'|trans }}</a>
+                        </td>
                     </tr>
                 {% endfor %}
             </table>

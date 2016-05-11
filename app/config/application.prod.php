@@ -2,11 +2,6 @@
 
 return array(
     'db.options' => array(
-        /*
-        'driver'   => 'pdo_sqlite',
-        'path'     => __DIR__ . '/psycho_tests.db', # path to database
-        */
-
         'driver' => 'pdo_mysql',
         'user' => 'vseoweb_pstests',
         'password' => 'vr8ovOmk7',

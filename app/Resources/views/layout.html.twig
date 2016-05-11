@@ -31,7 +31,6 @@
             <div class="header clearfix">
                 <nav>
                     <ul class="nav nav-pills pull-right">
-                        {#<li role="presentation" class="active"><a href="{{ path('homepage') }}">{{ 'link.homepage'|trans }}</a></li>#}
                         {% if is_user_logged() %}
                         <li role="presentation">
                             <div class="dropdown">
@@ -53,19 +52,37 @@
                         {% endif %}
                     </ul>
                 </nav>
-                <a href="{{ path('homepage') }}"><h3 class="text-muted">Psycho Tests</h3></a>
+                <a href="{{ path('homepage') }}"><h3 class="text-muted">School Tests</h3></a>
             </div>
-            {% for type, messages in app.session.flashbag.all() %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ type }} alert-dismissible fade in" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        {{ message|raw }}
-                    </div>
-                {% endfor %}
-            {% endfor %}
             {% endblock %}
 
-            {% block content %}{% endblock %}
+            <main class="col-sm-9">
+                {% for type, messages in app.session.flashbag.all() %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ type }} alert-dismissible fade in" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ message|raw }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% block content %}{% endblock %}
+            </main>
+            <aside class="col-sm-3">
+                {% set categories = get_categories() %}
+
+                {% if categories %}
+                <section>
+                    <h4>{{ 'title.categories'|trans }}</h4>
+                    <ul>
+                        {% for cat in categories %}
+                        <li><a href="{{ path('category_show', {'id' : cat.id}) }}">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </section>
+                {% endif %}
+            </aside>
+
+            <div class="clearfix"></div>
 
             {% block footer %}
             <footer class="footer">

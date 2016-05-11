@@ -9,6 +9,7 @@ class PredominantVariant implements StrategyInterface
         $tmp = array();
 
         foreach ($data as $index => $variant) {
+            $variant = explode('-', $variant)[1]; # extract value
             if (array_key_exists($variant, $tmp)) {
                 $tmp[$variant] += 1;
             } else {

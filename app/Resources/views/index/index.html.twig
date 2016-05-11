@@ -1,9 +1,13 @@
 {% extends 'layout.html.twig' %}
 
 {% block content -%}
-<div class="row marketing">
-    <h1>{{ 'homepage.title'|trans }}</h1>
-    {% if tests %}
+<div class="row">
+    {% set testInProgress = get_test_in_progress() %}
+
+    {% if testInProgress %}
+
+    <h3>{{ 'title.active_test'|trans }}</h3>
+
     <table class="table table-bordered table-hover table-striped test-list">
         <tr>
             <th style="width: 200px;">{{ 'title.name'|trans }}</th>
@@ -12,50 +16,45 @@
             {% if is_user_logged() %}<th>{{ 'title.passed_status'|trans }}</th>{% endif %}
             <th></th>
         </tr>
-        {% for test in tests %}
-            {% set isTestPassed = is_test_passed(test.id) %}
-            {% set isTestFree = test.isFree() %}
-            {% set isTestPurchased = is_test_purchased(test.id) %}
-            <tr style="vertical-align: middle">
-                <td>{{ test.name }}</td>
-                <td>{{ test.description|raw }}</td>
-                <td style="text-align: center">{{ test.passed }}</td>
-                {% if is_user_logged() %}
-                <td style="text-align: center">
-                    {% if not isTestFree and isTestPurchased %}<span style="color:red">{{ 'test.is_purсhased'|trans }}</span><br /><br />{% endif %}
-                    <span style="color:green">{% if isTestPassed %}{{ 'test.passed.yes'|trans }}{% else %}{{ 'test.passed.no'|trans }}{% endif %}</span>
-                </td>
-                {% endif %}
-                <td style="text-align: center">
-                    {% if not is_test_in_progress(test.id) %}
+        {% include 'index/__test-row.html.twig' with {'test': testInProgress} %}
+    </table>
 
-                        {% if isTestFree or isTestPurchased %}
-                            {% if is_test_passed(test.id) %}
-                            <a class="btn btn-warning" href="{{ path('test_page', {'id': test.id}) }}">{{ 'test.do_test_again'|trans }}</a>
-                            {% else %}
-                            <a class="btn btn-success" href="{{ path('test_page', {'id': test.id}) }}">{{ 'test.do_test'|trans }}</a>
-                            {% endif %}
-                        {% else %}
-                            <a class="btn btn-success" href="{{ path('user_purchase', {'test_id': test.id}) }}">{{ 'label.buy'|trans({'%price%': test.price}) }}</a>
-                        {% endif %}
+    {% endif %}
 
-                    {% else %}
-                        <div class="m10"><span class="green-text">{{ display_test_in_progress(test.id) }}</span></div>
-                        <div class="m10">
-                            <a class="btn btn-warning" href="{{ path('test_page', {'id': test.id}) }}">{{ 'continue_test'|trans }}</a>
-                        </div>
-                        <div class="m10">
-                            <a class="btn btn-danger" href="{{ path('test_cancel', {'id': test.id}) }}"
-                               title="{{ 'cancel_test'|trans }}"
-                               onclick="if (!confirm('{{ 'test.confirm_cancel'|trans }}')) return false;">
-                                <i class="glyphicon glyphicon-remove"></i>
-                            </a>
-                        </div>
-                    {% endif %}
-                </td>
-            </tr>
+    {% if cat is defined %}
+    <h3>{{ 'title.all_tests_in_cat'|trans({'%title%': cat.name}) }}</h3>
+    {% else %}
+    <h3>{{ 'title.all_tests'|trans }}</h3>
+    {% endif %}
+
+    {% if pagination.countAll %}
+
+    <table class="table table-bordered table-hover table-striped test-list">
+        <tr>
+            <th style="width: 200px;">{{ 'title.name'|trans }}</th>
+            <th style="width: 300px;">{{ 'title.description'|trans }}</th>
+            <th>{{ 'title.passed_count'|trans }}</th>
+            {% if is_user_logged() %}<th>{{ 'title.passed_status'|trans }}</th>{% endif %}
+            <th></th>
+        </tr>
+
+        {% for test in pagination.data %}
+            {% include 'index/__test-row.html.twig' %}
         {% endfor %}
     </table>
+        {% if pagination.countPages > 1 %}
+        <nav class="paginaton">
+            {% if pagination.prev %}
+            <a class="btn btn-default pull-left" href="?page={{ pagination.prev }}">{{ 'pagination.prev'|trans|raw }}</a>
+            {% endif %}
+
+            {% if pagination.next %}
+            <a class="btn btn-default pull-right" href="?page={{ pagination.next }}">{{ 'pagination.next'|trans|raw }}</a>
+            {% endif %}
+            <div class="clearfix"></div>
+        </nav>
+        {% endif %}
+
     {% else %}
     <p>{{ 'homepage.no_tests'|trans }}</p>
     {% endif %}

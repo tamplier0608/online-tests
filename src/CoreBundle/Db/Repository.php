@@ -89,11 +89,15 @@ abstract class Repository
         return $this->executeQuery($query, $params)->fetch()['count'];
     }
 
-    public function findBy(array $conditions = array(), array $params = array(), $limit = false)
+    public function findBy(array $conditions = array(), array $params = array(), $limit = false, $orderBy = false)
     {
         $query = $this->buildFetchAllQuery();
 
         $query = $this->prepareConditions($conditions, $query);
+
+        if (false !== $orderBy) {
+            $query .= ' ORDER BY ' . $orderBy;
+        }
 
         if (false !== $limit) {
             $query .= ' LIMIT ' . $limit;
@@ -112,14 +116,14 @@ abstract class Repository
     protected function buildFetchAllQuery($limit = false, $orderBy = false)
     {
         $sql = 'SELECT * FROM `' . static::$table . '`';
-        if (false !== $limit) {
-            $sql .= ' LIMIT ' . $limit;
-        }
 
         if ($orderBy) {
             $sql .= ' ORDER BY ' . $orderBy;
         }
 
+        if (false !== $limit) {
+            $sql .= ' LIMIT ' . $limit;
+        }
         return $sql;
     }
 

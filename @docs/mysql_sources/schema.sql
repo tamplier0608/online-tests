@@ -5,12 +5,14 @@ CREATE TABLE IF NOT EXISTS tests (
     created DATETIME NOT NULL,
     passed INTEGER(10) DEFAULT 0 NOT NULL,
     price FLOAT DEFAULT 0 NOT NULL,
-    PRIMARY KEY(id)
+    category_id INTEGER(10),
+    PRIMARY KEY(id),
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE = InnoDb DEFAULT CHARSET = UTF8;
 
 CREATE TABLE IF NOT EXISTS test_questions (
     id INTEGER(10) AUTO_INCREMENT NOT NULL,
-    value VARCHAR(255) NOT NULL,
+    value TEXT NOT NULL,
     test_id INTEGER(10)  NOT NULL,
     `index` INTEGER(10) NOT NULL,
     multioption TINYINT NOT NULL DEFAULT 0,
@@ -75,4 +77,11 @@ CREATE TABLE IF NOT EXISTS orders (
     PRIMARY KEY (id),
     FOREIGN KEY (customer_id) REFERENCES users(id),
     FOREIGN KEY (test_id) REFERENCES tests (id)
-);
+) ENGINE = InnoDb DEFAULT CHARSET = UTF8;
+
+CREATE TABLE IF NOT EXISTS  categories (
+    id INTEGER(10) AUTO_INCREMENT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    position INTEGER(3) DEFAULT 0 NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE = InnoDb DEFAULT CHARSET = UTF8;

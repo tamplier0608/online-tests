@@ -54,6 +54,7 @@ test:
         yes: пройден
         no: не пройден
     is_purсhased: куплен
+    buy_confirmation: С Вашего счета будет списано $%price%. Вы подтверждаете покупку?
 
 pagination:
     next: 'Дальше &raquo;'

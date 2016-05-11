@@ -21,7 +21,9 @@
                     <a class="btn btn-success" href="{{ path('test_page', {'id': test.id}) }}">{{ 'test.do_test'|trans }}</a>
                 {% endif %}
             {% else %}
-                <a class="btn btn-success" href="{{ path('user_purchase', {'test_id': test.id}) }}">{{ 'label.buy'|trans({'%price%': test.price}) }}</a>
+                <a class="btn btn-success btn-buy" href="{{ path('user_purchase', {'test_id': test.id}) }}"
+                   {% if is_user_logged() %}onclick="if (!confirm('{{ 'test.buy_confirmation'|trans({'%price%': test.price}) }}')) return false;"{% endif %}
+                >{{ 'label.buy'|trans({'%price%': test.price}) }}</a>
             {% endif %}
 
         {% else %}

@@ -6,7 +6,9 @@ use AppBundle\Entity\Repository\Categories;
 use AppBundle\Entity\Repository\Test\Options;
 use AppBundle\Entity\Repository\Tests;
 use AppBundle\Entity\Repository\User\PassedTests;
+use AppBundle\Entity\Repository\Users;
 use AppBundle\Entity\Test;
+use AppBundle\Entity\User;
 use AppBundle\Entity\User\PassedTest;
 use CoreBundle\Db\Repository;
 use CoreBundle\Test\Flow as TestFlow;
@@ -279,18 +281,33 @@ class IndexController
 
         $user = $app->getUser();
 
+        # try to replace user if it's request from teacher cabinet
+        if ($user->hasRole(User::ROLE_TEACHER) and $request->get('studentId')) {
+            $userRepository = new Users();
+            $student = $userRepository->find($request->get('studentId'));
+
+            if ($student instanceof User) {
+                $user = $student;
+            }
+        }
+
         if ($user) { # if user is logged in or request test result from cabinet get data from record of passed test
             $passedTestRepository = new PassedTests();
-            $passedTest = $passedTestRepository->findBy(array('user_id = ?', 'test_id = ?'), array($user->id, $test->id))[0];
+            $passedTests = $passedTestRepository->findBy(array('user_id = ?', 'test_id = ?'), array($user->id, $test->id));
 
-            if (false === $passedTest) {
-                $app->redirect($app['url_generator']->generate('home'));
+            $passedTest = false;
+            if (is_array($passedTests) && count($passedTests)) {
+                $passedTest = $passedTests[0];
+            }
+
+            if (!$passedTest) {
+                $app->redirect($app['url_generator']->generate('homepage'));
             }
 
             $testData = unserialize($passedTest->test_data);
             $resultValue = $testData->getResult();
             $answers = $testData->getAnswers();
-        } else {
+        } else { # else get data from test flow object
             $testFlow = $this->getTestFlow($app);
             $resultValue = $testFlow->getTestProgress()->getResult();
             $answers = $testFlow->getTestProgress()->getAnswers();

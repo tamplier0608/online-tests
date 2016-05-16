@@ -22,7 +22,7 @@ back: На главную
 read_more: Подробнее ...
 
 result:
-    description: Описание результата
+    description: Результат теста "%test_title%"
     points: "%count% из %all% баллов"
 
 error:
@@ -74,12 +74,18 @@ link:
 label:
     username: Логин
     password: Пароль
+    firstname: Имя
+    lastname: Фамилия
+    group: Класс
     repeat_password: Повторите пароль
     repeat_password: Повторите пароль
     email: E-mail
     submit: Отправить
     buy: Купить $%price%
     sum: Сумма
+
+placeholder:
+    choice: Выберите класс
 
 flashes:
     is_logged_user: Вы уже залогинены и не можете зарегистрироваться
@@ -110,10 +116,14 @@ email:
 
 cabinet:
     no_records: Нет записей
+    no_students: Ни один ученик пока не зарегистрирован
+    modal:
+        title: Пройденные тесты ученика
     tab:
         test_results: Результаты тестов
         purchased_tests: Купленные тесты
         comments: Комментарии
+        students_list: Список учеников
     label:
         test: Тест
         points: Баллы
@@ -122,3 +132,7 @@ cabinet:
         order_id: ID покупки
         content: Контент
         purchased_at: Дата покупки
+        result_value: Баллы
+        fullname: Имя
+        group: Класс
+        email: E-mail

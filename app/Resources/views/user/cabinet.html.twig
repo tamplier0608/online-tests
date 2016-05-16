@@ -1,10 +1,14 @@
 {% extends 'layout.html.twig' %}
 
 {% block content %}
+
     <!-- Nav tabs -->
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="active"><a href="#passed_tests" aria-controls="passed_tests" role="tab" data-toggle="tab">{{ 'cabinet.tab.test_results'|trans }}</a></li>
         <li role="presentation"><a href="#orders" aria-controls="orders" role="tab" data-toggle="tab">{{ 'cabinet.tab.purchased_tests'|trans }}</a></li>
+        {% if user and user.hasRole('TEACHER') %}
+        <li role="presentation"><a href="#students-list" aria-controls="orders" role="tab" data-toggle="tab">{{ 'cabinet.tab.students_list'|trans }}</a></li>
+        {% endif %}
     </ul>
 
     <!-- Tab panes -->
@@ -16,15 +20,22 @@
                 <tr>
                     <th>{{ 'cabinet.label.test'|trans }}</th>
                     <th>{{ 'cabinet.label.passed_at'|trans }}</th>
+                    <th>{{ 'cabinet.label.result_value'|trans }}</th>
                     <th>{{ 'cabinet.label.result'|trans }}</th>
                 </tr>
                 {% for passedTest in passedTests %}
                     <tr>
                         <td>{{ passedTest.getTestResult().getTest().name }}</td>
                         <td>{{ passedTest.passed_at }}</td>
+                        <td>{{ passedTest.result_value }}</td>
                         <td>
                             {{ passedTest.getTestResult().description|raw }}
-                            <a target="_blank" href="{{ path('result_page', {'id': passedTest.getTestResult().test_id}) }}">{{ 'read_more'|trans }}</a>
+
+                            {% if is_teachers_request is defined and is_teachers_request %}
+                                <a target="_blank" href="{{ path('student_result_page', {'studentId': user.id, 'id': passedTest.getTestResult().test_id}) }}">{{ 'read_more'|trans }}</a>
+                            {% else %}
+                                <a target="_blank" href="{{ path('result_page', {'id': passedTest.getTestResult().test_id}) }}">{{ 'read_more'|trans }}</a>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
@@ -56,7 +67,61 @@
                 <p style="text-align: center; margin: 20px 0;">{{ 'cabinet.no_records'|trans }}</p>
             {% endif %}
         </div>
+
+        {% if user and user.hasRole('TEACHER') %}
+        <div role="tabpanel" class="tab-pane" id="students-list">
+            {% if students %}
+                <br />
+                <table class="table table-bordered table-striped table-hover">
+                    <tr>
+                        <th>{{ 'cabinet.label.fullname'|trans }}</th>
+                        <th>{{ 'cabinet.label.group'|trans }}</th>
+                        <th>{{ 'cabinet.label.email'|trans }}</th>
+                    </tr>
+                    {% for student in students %}
+                        <tr>
+                            <td><a href="javascript:void(0)" data-student="{{ student.id }}" data-toggle="modal" data-target="#studentModal">{{ student.firstname }} {{ student.lastname }}</a></td>
+                            <td>{{ student.getGroup().name }}</td>
+                            <td>{{ student.email }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p style="text-align: center; margin: 20px 0;">{{ 'cabinet.no_students'|trans }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 
     <p><a href="{{ path('homepage') }}"><i class="glyphicon glyphicon-arrow-left"></i> {{ 'back'|trans }}</a></p>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="studentModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{{ 'cabinet.modal.title'|trans }}</h4>
+                </div>
+                <div class="modal-body">
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+{% endblock %}
+
+{%  block javascripts %}
+    {{ parent() }}
+
+    <script>
+        $('#studentModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var student = button.data('student');
+
+            var modal = $(this);
+            var title = modal.find('.modal-title');
+            modal.find('.modal-body').load('{{ get_request().getBaseUrl() }}'+ '/student/' + student + '/info #passed_tests')
+        })
+    </script>
 {% endblock %}

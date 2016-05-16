@@ -173,6 +173,10 @@ class Application extends SilexCoreApplication
                 return $categoryRepository->fetchAll($limit = false, 'position');
             }));
 
+            $twig->addFunction(new Twig_SimpleFunction('get_request', function() use($app) {
+                return $app['request'];
+            }));
+
             return $twig;
         }));
 

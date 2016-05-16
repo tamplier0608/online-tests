@@ -8,6 +8,7 @@ return array(
             'controller' => 'AppBundle\Controller\IndexController::indexAction',
             'method' => 'get',
         ),
+
         array(
             'name' => 'test_page',
             'pattern' => '/test/{id}',
@@ -15,6 +16,7 @@ return array(
             'method' => 'get',
             'assert' => array('id' => '^[\d]+$'),
         ),
+
         array(
             'name' => 'test_processing',
             'pattern' => '/test/{id}',
@@ -22,6 +24,7 @@ return array(
             'method' => 'post',
             'assert' => array('id' => '^[\d]+$'),
         ),
+
         array(
             'name' => 'result_page',
             'pattern' => '/test/{id}/result',
@@ -29,6 +32,7 @@ return array(
             'method' => 'get',
             'assert' => array('id' => '^[\d]+$'),
         ),
+
         array(
             'name' => 'test_cancel',
             'pattern' => '/test/{id}/cancel',
@@ -100,7 +104,23 @@ return array(
             'pattern' => 'user/clean-data/{username}',
             'controller' => 'AppBundle\Controller\UserController::cleanData',
             'method' => 'get'
-        )
+        ),
+
+        // teacher routes
+        array(
+            'name' => 'student_info',
+            'pattern' => '/student/{id}/info',
+            'controller' => 'AppBundle\Controller\UserController::cabinetAction',
+            'method' => 'get',
+        ),
+
+        array(
+            'name' => 'student_result_page',
+            'pattern' => '/student/{studentId}/test/{id}/result',
+            'controller' => 'AppBundle\Controller\IndexController::finishTestAction',
+            'method' => 'get',
+            'assert' => array('id' => '^[\d]+$'),
+        ),
     ),
 
 );

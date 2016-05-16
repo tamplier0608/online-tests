@@ -10,6 +10,16 @@ password:
     min_length: Пароль не должен быть короче {{ limit }} символов
     max_length: Пароль не должен быть длиннее {{ limit }} символов
 
+firstname:
+    not_blank: Введите имя
+    min_length: Имя не должно быть короче {{ limit }} символов
+    max_length: Имя не должно быть длиннее {{ limit }} символов
+
+lastname:
+    not_blank: Введите фамилию
+    min_length: Фамилия не должна быть короче {{ limit }} символов
+    max_length: Фамилия не должна быть длиннее {{ limit }} символов
+
 email:
     not_blank: Введите E-mail
     not_valid_email: Неверный формат E-mail

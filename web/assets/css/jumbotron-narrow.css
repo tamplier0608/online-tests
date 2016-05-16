@@ -58,6 +58,19 @@ body { padding-top: 20px; padding-bottom: 20px; }
   }
 }
 
+@media screen and (max-width: 639px) {
+  table {
+    display: -moz-box;
+    display: -webkit-box;
+    overflow: auto;
+  }
+
+  .nav-tabs li {
+    width: calc(100% / 3);
+    width: -webkit-calc(100% / 3);
+  }
+}
+
 aside section { padding: 0 10px; }
 .submit-btn { float: left; }
 ul.test_options { list-style: none; padding: 0 20px; color: black }

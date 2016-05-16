@@ -43,16 +43,27 @@ CREATE TABLE IF NOT EXISTS test_results (
 ) ENGINE = InnoDb DEFAULT CHARSET = UTF8;
 
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER(10) AUTO_INCREMENT NOT NULL ,
+    id INTEGER(10) AUTO_INCREMENT NOT NULL,
     username VARCHAR(20) UNIQUE NOT NULL,
     password VARCHAR(64) NOT NULL,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
+    role ENUM('student', 'teacher') DEFAULT 'student' NOT NULL,
+    group_id INTEGER(10) NOT NULL,
     email VARCHAR(100) NOT NULL,
     wallet FLOAT DEFAULT 0,
     registered_at DATETIME NOT NULL,
     activation_code VARCHAR(255) NOT NULL,
     active TINYINT DEFAULT 0,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (group_id) REFERENCES user_groups(id) ON DELETE CASCADE
 ) ENGINE = InnoDb DEFAULT CHARSET = UTF8;
+
+CREATE TABLE IF NOT EXISTS user_groups (
+    id INTEGER(10) AUTO_INCREMENT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE = InnoDB DEFAULT CHARSET = UTF8;
 
 # Relation between users and test results
 CREATE TABLE IF NOT EXISTS passed_tests (

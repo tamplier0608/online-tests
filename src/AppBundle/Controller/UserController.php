@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\Order;
 use AppBundle\Entity\Repository\Orders;
 use AppBundle\Entity\Repository\Tests;
+use AppBundle\Entity\Repository\User\Groups as UserGroups;
 use AppBundle\Entity\Repository\Users;
 use AppBundle\Entity\User;
 use CoreBundle\Auth\Adapter\DbTable;
@@ -84,6 +85,9 @@ class UserController
             $user = new User();
             $user->username = $form->getData()['username'];
             $user->email = $form->getData()['email'];
+            $user->firstname = $form->getData()['firstname'];
+            $user->lastname = $form->getData()['lastname'];
+            $user->group_id = $form->getData()['group'];
             $user->password = md5($form->getData()['password'] . $app['salt']);
             $user->wallet = 10; # give to user registration prise
 
@@ -112,6 +116,31 @@ class UserController
     protected function createSigninForm(\Application $app)
     {
         $form = $app['form.factory']->createBuilder('form', null, array('attr' => array('novalidate' => 'novalidate')))
+            ->add('firstname', 'text', array(
+                'constraints' => array(
+                    new Assert\NotBlank(array('message' => $app['translator']->trans('firstname.not_blank', array(), 'validation'))),
+                    new Assert\Length(array(
+                        'min' => 2,
+                        'max' => 100,
+                        'minMessage' => $app['translator']->trans('firstname.min_length', array(), 'validation'),
+                        'maxMessage' => $app['translator']->trans('firstname.max_length', array(), 'validation')
+                    )),
+                ),
+            ))
+            ->add('lastname', 'text', array(
+                'constraints' => array(
+                    new Assert\NotBlank(array('message' => $app['translator']->trans('lastname.not_blank', array(), 'validation'))),
+                    new Assert\Length(array(
+                        'min' => 2,
+                        'max' => 100,
+                        'minMessage' => $app['translator']->trans('lastname.min_length', array(), 'validation'),
+                        'maxMessage' => $app['translator']->trans('lastname.max_length', array(), 'validation')
+                    )),
+                ),
+            ))
+            ->add('group', 'choice', array(
+                'choices' => $this->getUserGroups(),
+            ))
             ->add('username', 'text', array(
                 'constraints' => array(
                     new Assert\NotBlank(array('message' => $app['translator']->trans('username.not_blank', array(), 'validation'))),
@@ -154,6 +183,20 @@ class UserController
         return $form;
     }
 
+    private function getUserGroups()
+    {
+        $userGroupRepository = new UserGroups();
+        $groups = $userGroupRepository->findBy(['id != 1'], [], $limit = false, $orderBy = 'name');
+
+        $return = [];
+
+        foreach ($groups as $group) {
+            $return[$group->id] = $group->name;
+        }
+
+        return $return;
+    }
+
     private function getActivationEmailMessage(\Application $app, $user)
     {
         $activationLink = $app['request']->getHost() . $app['url_generator']->generate('user_activation', array(
@@ -187,11 +230,27 @@ class UserController
         }
 
         $user = $app->getUser();
+        $userRepository = new Users();
 
-        return $app['twig']->render('user/cabinet.html.twig', array(
-            'orders' => $user->getOrders(),
-            'passedTests' => $user->getPassedTests(),
-        ));
+        $viewData = array();
+
+        if ($user->hasRole(User::ROLE_TEACHER)) {
+            # try to replace user if it's request from teacher cabinet
+            if ($studentId = $request->get('id')) {
+                $student = $userRepository->find($studentId);
+                if ($student instanceof User) {
+                    $user = $student;
+                    $viewData['is_teachers_request'] = true;
+                }
+            }
+            $viewData['students'] = $userRepository->findBy(['role != ?', 'active = ?'], [User::ROLE_TEACHER, 1]);
+        }
+
+        $viewData['user'] = $user;
+        $viewData['orders'] = $user->getOrders();
+        $viewData['passedTests'] = $user->getPassedTests();
+
+        return $app['twig']->render('user/cabinet.html.twig', $viewData);
     }
 
     public function activationAction(Request $request, \Application $app)

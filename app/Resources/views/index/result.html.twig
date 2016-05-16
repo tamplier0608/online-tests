@@ -1,7 +1,7 @@
 {% extends 'layout.html.twig' %}
 
 {% block content %}
-<h1>{{ 'result.description'|trans }}</h1>
+<h1>{{ 'result.description'|trans({'%test_title%': result.getTest().name}) }}</h1>
 <h2>{% if result.title %}{{ result.title }}{% endif %}
     {% if right_answers is defined %}
     ({{ 'result.points'|trans({'%count%': resultValue, '%all%': users_answers|length}) }})

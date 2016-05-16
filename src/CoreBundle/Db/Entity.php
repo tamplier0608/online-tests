@@ -161,7 +161,7 @@ abstract class Entity implements \ArrayAccess
         $sql = $this->buildSaveQuery();
 
         $params = array_values($this->getPublicVars());
-        $params = array_merge($params, $params);
+        $params = array_merge($params, $params); # there are two parts of query with the same params here
 
         $result = static::getDbConnection()->exec($sql, $params);
 

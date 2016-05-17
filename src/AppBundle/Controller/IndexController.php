@@ -390,8 +390,6 @@ class IndexController
         }
 
         $question = $questions[$questionNumber - 1];
-        $question['number'] = $questionNumber;
-        $question['options'] = $question->getOptions();
 
         return array($test, $question);
     }

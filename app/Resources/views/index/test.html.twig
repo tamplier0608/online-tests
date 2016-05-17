@@ -13,10 +13,10 @@
 
     {% if test.isFree() or is_test_purchased(test.id) %}
     <div class="panel panel-default">
-        <div class="panel-heading">{{ question.number }}. {{ question.value }}</div>
+        <div class="panel-heading">{{ question.index }}. {{ question.value }}</div>
         <div class="panel-body">
             <form method="post">
-                <input type="hidden" name="question_number" value="{{ question.number }}">
+                <input type="hidden" name="question_number" value="{{ question.index }}">
 
                 <ul class="test_options">
                     {% for index, option in question.options %}

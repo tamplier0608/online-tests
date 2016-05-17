@@ -282,7 +282,7 @@ class IndexController
         $user = $app->getUser();
 
         # try to replace user if it's request from teacher cabinet
-        if ($user->hasRole(User::ROLE_TEACHER) and $request->get('studentId')) {
+        if ($user && $user->hasRole(User::ROLE_TEACHER) and $request->get('studentId')) {
             $userRepository = new Users();
             $student = $userRepository->find($request->get('studentId'));
 
